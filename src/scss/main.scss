@@ -1,0 +1,93 @@
+//------------------------------------------------------------------------------------------------
+// EVOCSS
+//------------------------------------------------------------------------------------------------
+
+/*
+This is an example EvoCSS manifest file. DO NOT MODIFY THIS FILE
+DIRECTLY. Instead, copy and paste it into your own CSS directory and
+make additions, extensions, and modifications there.
+*/
+
+
+// OVERRIDES
+//------------------------------------------------------------------------------------------------
+
+/*
+If you need to override any settings (Breakpoints, colors, spacing etc), here
+is the best place to do it. Alternatively, you can duplicate the relevant settings
+file from node_modules and import your modified version.
+*/
+
+/*
+Example:
+
+$mq-breakpoints: (
+	"sm": 375px,
+	"md": 720px,
+	"lg": 1024px
+)
+
+*/
+
+
+// IMPORTS
+//------------------------------------------------------------------------------------------------
+
+// Fonts
+@import url('https://fonts.googleapis.com/css?family=Inconsolata:400,700');
+
+body {
+	font-family: 'Inconsolata', monospace;
+	overflow:hidden;
+}
+
+input:-webkit-autofill {
+	-webkit-box-shadow: 0 0 0 1000px white inset !important;
+}
+
+// Settings
+@import "../../../node_modules/evocss/settings/breakpoints";
+@import "../../../node_modules/evocss/settings/colors";
+@import "../../../node_modules/evocss/settings/grid-system";
+@import "../../../node_modules/evocss/settings/spacing";
+@import "../../../node_modules/evocss/settings/typography";
+
+// Tools../
+@import "../../../node_modules/sass-mq/mq";
+@import "../../../node_modules/evocss/tools/clearfix";
+@import "../../../node_modules/evocss/tools/color";
+@import "../../../node_modules/evocss/tools/rem";
+
+// Generic../
+@import "../../../node_modules/normalize.css/normalize";
+@import "../../../node_modules/evocss/generic/box-sizing";
+@import "../../../node_modules/evocss/generic/reset";
+
+// Elements../
+@import "../../../node_modules/evocss/elements/headings";
+@import "../../../node_modules/evocss/elements/images";
+@import "../../../node_modules/evocss/elements/lists";
+@import "../../../node_modules/evocss/elements/page";
+@import "../../../node_modules/evocss/elements/paragraphs";
+
+// Objects../
+@import "../../../node_modules/evocss/objects/box";
+@import "../../../node_modules/evocss/objects/container";
+@import "../../../node_modules/evocss/objects/cover";
+@import "../../../node_modules/evocss/objects/layout";
+@import "../../../node_modules/evocss/objects/list-bare";
+@import "../../../node_modules/evocss/objects/media";
+
+// Components../
+@import "../../../node_modules/evocss/components/button";
+@import "../../../node_modules/evocss/components/field";
+@import "../../../node_modules/evocss/components/consmetics";
+@import "../../../node_modules/evocss/components/table";
+@import "../../../node_modules/evocss/components/appdraw";
+
+// Utilities../
+@import "../../../node_modules/evocss/utilities/alignments";
+@import "../../../node_modules/evocss/utilities/hide";
+@import "../../../node_modules/evocss/utilities/spacing";
+@import "../../../node_modules/evocss/utilities/widths";
+@import "../../../node_modules/evocss/utilities/colors";
