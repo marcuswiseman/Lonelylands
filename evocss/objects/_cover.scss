@@ -1,0 +1,42 @@
+//------------------------------------------------------------------------------------------------
+// COVER OBJECT
+//------------------------------------------------------------------------------------------------
+
+/*
+A floating object which sites above a selected space. Remember to
+set position:relative on containing element. Typically used for things like
+modal backgrounds to fade out regular page content.
+*/
+
+/*
+<div class="o-cover">
+	CONTENT
+</div>
+*/
+
+
+// BLOCK & ELEMENTS
+//------------------------------------------------------------------------------------------------
+
+.o-cover {
+	position:absolute;
+	width:100%;
+	height:100%;
+	left:0;
+	top:0;
+}
+
+
+// POSITION MODIFIERS
+//------------------------------------------------------------------------------------------------
+
+/*
+Make the cover right aligned. This would typically only be used if styles were
+applied to make it only cover a certain amount of the page, from the right
+then outwards.
+*/
+
+.o-cover--right {
+	left:auto;
+	right:0;
+}
