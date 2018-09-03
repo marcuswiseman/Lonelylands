@@ -11,7 +11,7 @@ const gulpif = require('gulp-if');
 const uglify = require('gulp-uglify');
 
 var styleSRC  = './src/scss/**/*.scss';
-var styleSRC2 = './node_modules/evocss/**/*.scss';
+var styleSRC2 = '../node_modules/evocss/**/*.scss';
 var styleDIST = './dist/css/';
 
 var vueSRC = './src/js/**/*.js';
