@@ -1,0 +1,11 @@
+
+@each $sp-name, $sp-value in $colors {
+
+	.u-bg--#{$sp-name} {
+		background:$sp-value;
+	}
+
+	.u-fg--#{$sp-name} {
+		color:$sp-value;
+	}
+}

@@ -1,0 +1,23 @@
+//------------------------------------------------------------------------------------------------
+// SPACING FUNCTION
+//------------------------------------------------------------------------------------------------
+
+/*
+A function to return a specific spacing value from the map in settings.spacing
+
+.myElement {
+	padding-left: spacing("large");
+}
+*/
+
+
+@function spacing($value) {
+	$chosen-spacing: null;
+	@if map-has-key($spacing, $value) {
+		$chosen-spacing: map-get($spacing, $value);
+	}
+	@else {
+		@error "'#{$value}' doesn't exist in 'settings.spacing'";
+	}
+	@return $chosen-spacing;
+}

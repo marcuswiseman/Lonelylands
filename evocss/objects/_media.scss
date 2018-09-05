@@ -1,0 +1,147 @@
+//------------------------------------------------------------------------------------------------
+// MEDIA OBJECT
+//------------------------------------------------------------------------------------------------
+
+/*
+Useful pattern when you need align an image alongside content.
+
+http://www.stubbornella.org/content/2010/06/25/the-media-object-saves-hundreds-of-lines-of-code/
+*/
+
+/*
+<div class="o-media">
+	<div class="o-media__image">
+		<img src="" alt="">
+	</div>
+	<div class="o-media__body">
+		CONTENT
+	</div>
+</div>
+*/
+
+
+// BLOCK & ELEMENTS
+//------------------------------------------------------------------------------------------------
+
+/*
+[1] Make the image take as little space as possible
+*/
+
+.o-media {
+	display: table;
+	box-sizing:border-box;
+}
+
+.o-media__body {
+	width: auto;
+}
+
+.o-media__image,
+.o-media__body {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+.o-media__image {
+	width:rem(1px); /* [1] */
+	img,
+	svg {
+		display: block;
+		max-width: none;
+	}
+}
+
+
+// REVERSE DIRECTION MODIFIER
+//------------------------------------------------------------------------------------------------
+
+/*
+Add `o-media--reverse` to swap padding directon if the image needs to be
+on the right, rather than left.
+*/
+
+
+// VERTICAL ALIGNMENT MODIFIERS
+//------------------------------------------------------------------------------------------------
+
+/*
+Change the vertical alignment of media contents. Default: middle.
+*/
+
+.o-media--top {
+	> .o-media__image,
+	> .o-media__body {
+		vertical-align: top;
+	}
+}
+
+.o-media--middle {
+	> .o-media__image,
+	> .o-media__body {
+		vertical-align: middle;
+	}
+}
+
+.o-media--bottom {
+	> .o-media__image,
+	> .o-media__body {
+		vertical-align: bottom;
+	}
+}
+
+
+// SPACING VARIANT MODIFIERS
+//------------------------------------------------------------------------------------------------
+
+/*
+Alter the spacing in between image and text
+*/
+
+// Generate using settings.spacing
+// Example o-media--spacing-small
+@each $sp-name, $sp-value in $spacing {
+	.o-media--spacing-#{$sp-name} {
+		& > .o-media__image {
+			padding-right:rem($sp-value);
+		}
+		&.o-media--reverse > .o-media__image {
+			padding-left:rem($sp-value);
+			padding-right:0;
+		}
+	}
+	[class*='o-media--collapse'].o-media--spacing-#{$sp-name} {
+		& > .o-media__image {
+			padding-bottom:rem($sp-value);
+		}
+		&.o-media--reverse > .o-media__image {
+			padding-top:rem($sp-value);
+			padding-bottom:0;
+		}
+	}
+}
+
+
+// COLLAPSE MODIFIERS
+//--------------------------------------------------------------------------------------------------------------------------------------
+
+/*
+Breaks the media object until a certan breakpoint so image and text stack vertically. Use when the media
+object elements don't fit horizontally on smaller screens. When in collapsed state, any spacing modifers
+are converted to vertical spacing between image and text.
+*/
+
+@each $bp-name, $bp-value in $mq-breakpoints {
+	@include mq($until: #{$bp-name}) {
+		.o-media--collapse\@max-#{$bp-name} {
+			> .o-media__image {
+				width:100%;
+			}
+			> .o-media__image,
+			> .o-media__body {
+				display:block;
+			}
+		}
+	}
+}
+
+
