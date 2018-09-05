@@ -12,7 +12,7 @@ page_setup('no_login');
 	<link rel="stylesheet" href="../css/main.min.css">
 </head>
 
-<body class="u-bg--dingey-green u-fg--dingey-white">
+<body class="u-fg--dingey-white">
 
 <div id="app">
 

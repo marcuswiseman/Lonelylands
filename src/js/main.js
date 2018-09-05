@@ -226,6 +226,8 @@ class Form {
 
 // --------------- COMPONENTS ---------------
 
+// TODO - On click display description of skills and traits.
+
 Vue.component('character-creator', {
 	template: `
 		<div class="c-character-creator">

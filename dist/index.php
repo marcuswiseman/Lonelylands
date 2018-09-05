@@ -14,7 +14,7 @@ page_setup();
 	<link rel="stylesheet" href="css/main.min.css">
 </head>
 
-<body class="u-bg--dingey-green u-fg--dingey-white">
+<body class="u-fg--dingey-white">
 
 <?= file_get_contents('symbols.html'); ?>
 
@@ -33,8 +33,16 @@ page_setup();
 			</div>
 		</div>
 
+		<!-- USER DETAIL BAR -->
+		<div v-if="user.character_creation == 0 && panel.active == ''">
+			<div class="o-layout c-detailbar">
+				Health {{ stats.health }}
+				Stamina {{ stats.stamina }}
+			</div>
+		</div>
+
 		<!-- APP DRAW -->
-		<div v-else-if="user.character_creation == 0 && panel.active == ''">
+		<div v-if="user.character_creation == 0 && panel.active == ''">
 
 			<div class="o-layout c-appdraw o-layout--flush u-padding-hoz-regular">
 
