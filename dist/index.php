@@ -36,8 +36,21 @@ page_setup();
 		<!-- USER DETAIL BAR -->
 		<div v-if="user.character_creation == 0 && panel.active == ''">
 			<div class="o-layout c-detailbar">
-				Health {{ stats.health }}
-				Stamina {{ stats.stamina }}
+
+				<div class="o-layout__item u-3/12">
+					<svg class="c-detailbar__icon">
+						<use xlink:href="#detailbar-heart1" xmlns:xlink="http://www.w3.org/1999/xlink"></use>
+					</svg>
+					{{ stats.health }}
+				</div>
+
+				<div class="o-layout__item u-3/12">
+					<svg class="c-detailbar__icon">
+						<use xlink:href="#detailbar-stamina1" xmlns:xlink="http://www.w3.org/1999/xlink"></use>
+					</svg>
+					{{ stats.stamina }}
+				</div>
+
 			</div>
 		</div>
 
