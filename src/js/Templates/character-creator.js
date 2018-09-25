@@ -62,7 +62,7 @@ Vue.component('character-creator', {
 								</td>
 							</tr>
 							<tr>
-								<th>Location</th>
+								<th>Birth Location</th>
 								<td>
 									{{ character.city }}
 									<input type="hidden" :value="character.city" name="city">

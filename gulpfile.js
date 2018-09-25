@@ -13,7 +13,7 @@ const gulpif = require('gulp-if');
 const uglify = require('gulp-uglify');
 
 var styleSRC  = './src/scss/**/*.scss';
-var styleSRC2 = '../node_modules/evocss/**/*.scss';
+var styleSRC2 = './node_modules/evocss/**/*.scss';
 var styleDIST = './dist/css/';
 
 var jsSRC = './src/js/**/*.js';
@@ -88,7 +88,7 @@ gulp.task('js', function () {
 });
 
 
-gulp.task('watch', function () {
+gulp.task('default', function () {
 	console.log('--------------------------------------');
 	gulp.watch(styleSRC, ['style']);
 	gulp.watch(styleSRC2, ['style']);

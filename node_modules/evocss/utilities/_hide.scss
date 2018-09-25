@@ -1,0 +1,31 @@
+//------------------------------------------------------------------------------------------------
+// HIDE
+//------------------------------------------------------------------------------------------------
+
+/*
+Utility classes for easily hiding elements.
+*/
+
+.u-hide {
+	display:none !important;
+}
+
+// Hides when breakpoint is hit
+// Example: .u-hide@md
+@each $bp-name, $bp-value in $mq-breakpoints {
+	@include mq(#{$bp-name}) {
+		.u-hide\@#{$bp-name} {
+			display:none !important;
+		}
+	}
+}
+
+// Hides until breakpoint is hit
+// Example: .u-hide@max-md
+@each $bp-name, $bp-value in $mq-breakpoints {
+	@include mq($until: #{$bp-name}) {
+		.u-hide\@max-#{$bp-name} {
+			display:none !important;
+		}
+	}
+}

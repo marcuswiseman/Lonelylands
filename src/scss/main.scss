@@ -51,49 +51,49 @@ input:-webkit-autofill {
 }
 
 // Settings
-@import "../../../node_modules/evocss/settings/breakpoints";
-@import "../../../node_modules/evocss/settings/colors";
-@import "../../../node_modules/evocss/settings/grid-system";
-@import "../../../node_modules/evocss/settings/spacing";
-@import "../../../node_modules/evocss/settings/typography";
+@import "../../node_modules/evocss/settings/breakpoints";
+@import "../../node_modules/evocss/settings/colors";
+@import "../../node_modules/evocss/settings/grid-system";
+@import "../../node_modules/evocss/settings/spacing";
+@import "../../node_modules/evocss/settings/typography";
 
 // Tools../
 @import "../../../node_modules/sass-mq/mq";
-@import "../../../node_modules/evocss/tools/clearfix";
-@import "../../../node_modules/evocss/tools/color";
-@import "../../../node_modules/evocss/tools/rem";
+@import "../../node_modules/evocss/tools/clearfix";
+@import "../../node_modules/evocss/tools/color";
+@import "../../node_modules/evocss/tools/rem";
 
 // Generic../
 @import "../../../node_modules/normalize.css/normalize";
-@import "../../../node_modules/evocss/generic/box-sizing";
-@import "../../../node_modules/evocss/generic/reset";
+@import "../../node_modules/evocss/generic/box-sizing";
+@import "../../node_modules/evocss/generic/reset";
 
 // Elements../
-@import "../../../node_modules/evocss/elements/headings";
-@import "../../../node_modules/evocss/elements/images";
-@import "../../../node_modules/evocss/elements/lists";
-@import "../../../node_modules/evocss/elements/page";
-@import "../../../node_modules/evocss/elements/paragraphs";
+@import "../../node_modules/evocss/elements/headings";
+@import "../../node_modules/evocss/elements/images";
+@import "../../node_modules/evocss/elements/lists";
+@import "../../node_modules/evocss/elements/page";
+@import "../../node_modules/evocss/elements/paragraphs";
 
 // Objects../
-@import "../../../node_modules/evocss/objects/box";
-@import "../../../node_modules/evocss/objects/container";
-@import "../../../node_modules/evocss/objects/cover";
-@import "../../../node_modules/evocss/objects/layout";
-@import "../../../node_modules/evocss/objects/list-bare";
-@import "../../../node_modules/evocss/objects/media";
+@import "../../node_modules/evocss/objects/box";
+@import "../../node_modules/evocss/objects/container";
+@import "../../node_modules/evocss/objects/cover";
+@import "../../node_modules/evocss/objects/layout";
+@import "../../node_modules/evocss/objects/list-bare";
+@import "../../node_modules/evocss/objects/media";
 
 // Components../
-@import "../../../node_modules/evocss/components/button";
-@import "../../../node_modules/evocss/components/field";
-@import "../../../node_modules/evocss/components/consmetics";
-@import "../../../node_modules/evocss/components/table";
-@import "../../../node_modules/evocss/components/appdraw";
-@import "../../../node_modules/evocss/components/detailbar";
+@import "../../node_modules/evocss/components/button";
+@import "../../node_modules/evocss/components/field";
+@import "../../node_modules/evocss/components/consmetics";
+@import "../../node_modules/evocss/components/table";
+@import "../../node_modules/evocss/components/appdraw";
+@import "../../node_modules/evocss/components/detailbar";
 
 // Utilities../
-@import "../../../node_modules/evocss/utilities/alignments";
-@import "../../../node_modules/evocss/utilities/hide";
-@import "../../../node_modules/evocss/utilities/spacing";
-@import "../../../node_modules/evocss/utilities/widths";
-@import "../../../node_modules/evocss/utilities/colors";
+@import "../../node_modules/evocss/utilities/alignments";
+@import "../../node_modules/evocss/utilities/hide";
+@import "../../node_modules/evocss/utilities/spacing";
+@import "../../node_modules/evocss/utilities/widths";
+@import "../../node_modules/evocss/utilities/colors";
