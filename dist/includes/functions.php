@@ -80,7 +80,8 @@ function page_setup ( $option = '' )
 }
 
 # SHOW ERRORS
-function show_errors() {
+function show_errors ()
+{
 	ini_set('display_errors', 1);
 	ini_set('display_startup_errors', 1);
 	error_reporting(E_ALL);
@@ -110,8 +111,9 @@ function decrypt_string ( $string, $key = '@Unic0rnPizza832!' )
 	return $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
 }
 
-# CLEAN
-function clean ($value) {
+# CLEAN VALUES FOR DATABASE
+function clean ( $value )
+{
 	$value = strtolower($value);
 	$value = str_replace(' ', '-', $value);
 	return $value;

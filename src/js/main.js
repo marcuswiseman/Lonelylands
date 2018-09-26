@@ -48,6 +48,7 @@ var app = new Vue({
 		),
 		user: {},
 		stats: {},
+		inventory: {},
 		details: {},
 		panel: {
 			active:''
@@ -64,6 +65,10 @@ var app = new Vue({
 		set_stats: function (stats) {
 			if (dev) console.log(stats);
 			this.stats = stats;
+		},
+		set_inventory: function (inventory) {
+			if (dev) console.log(inventory);
+			this.inventory = inventory;
 		},
 		set_details: function (details) {
 			if (dev) console.log(details);

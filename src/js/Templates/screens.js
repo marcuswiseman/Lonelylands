@@ -8,7 +8,8 @@ Vue.component('screens', {
 	
 			<screen-inventory
 					v-bind:user="user"
-					v-bind:panel="panel">
+					v-bind:panel="panel"
+					v-bind:inventory="inventory">
 			</screen-inventory>
 	
 			<screen-stats
@@ -47,5 +48,5 @@ Vue.component('screens', {
 			</screen-lootcrates>
 		</div>
 	`,
-	props: ['user', 'panel']
+	props: ['user', 'panel', 'inventory']
 });

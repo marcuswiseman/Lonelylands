@@ -47,7 +47,8 @@ page_setup();
 		<!-- SCREENS -->
 		<screens
 				v-bind:user="user"
-				v-bind:panel="panel">
+				v-bind:panel="panel"
+				v-bind:inventory="inventory">
 		</screens>
 
 	</div>

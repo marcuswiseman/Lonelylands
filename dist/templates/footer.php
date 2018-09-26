@@ -4,6 +4,7 @@
 <script>
 	app.__vue__.set_user(<?= $survivor->user() ? json_encode($survivor->user()) : 'null' ?>);
 	app.__vue__.set_stats(<?= $survivor->stats() ? json_encode($survivor->stats()) : 'null' ?>);
+	app.__vue__.set_inventory(<?= $survivor->inventory() ? json_encode($survivor->inventory()) : 'null' ?>);
 	app.__vue__.set_details({
 		'skills':<?= json_encode($survivor->details->get_skills()) ?>,
 		'traits':<?= json_encode($survivor->details->get_traits()) ?>,

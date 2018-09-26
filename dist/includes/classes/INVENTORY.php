@@ -6,7 +6,7 @@ class INVENTORY {
 
 	private $user_id;
 	private $contents;
-	private $items;
+	public $items;
 
 	/**
 	 * INVENTORY constructor.
@@ -16,11 +16,26 @@ class INVENTORY {
 	{
 		global $DB;
 		$this->user_id = $user_id;
-
 		$db_contents = $DB->select('tbl_inventory', '*', ['user_id'=>$user_id]);
-		$this->contents = $db_contents;
 
+		$this->contents = $db_contents;
 		$this->items = new ITEMS();
+	}
+
+	/**
+	 * @return array|bool
+	 */
+	public function getContents ()
+	{
+		return $this->contents;
+	}
+
+	/**
+	 * @return ITEMS
+	 */
+	public function getItems ()
+	{
+		return $this->items;
 	}
 
 }

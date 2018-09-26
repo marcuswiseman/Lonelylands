@@ -4,12 +4,11 @@ use Medoo\Medoo;
 
 class SURVIVOR
 {
-	private $stats;
-	private $user;
-
 	public $user_id;
 	public $details;
 	public $inventory;
+	private $stats;
+	private $user;
 
 	/**
 	 * STATS constructor.
@@ -40,15 +39,28 @@ class SURVIVOR
 	/**
 	 * @return array|bool|mixed
 	 */
-	public function user() {
+	public function user ()
+	{
 		return !empty($this->user) ? $this->user : false;
 	}
 
 	/**
 	 * @return array|bool|mixed
 	 */
-	public function stats() {
+	public function stats ()
+	{
 		return !empty($this->stats) ? $this->stats : false;
+	}
+
+	/**
+	 * @return array|bool|mixed
+	 */
+	public function inventory ()
+	{
+		return !empty($this->inventory) ? [
+			'items'=>$this->inventory->getItems()->get(),
+			'contents'=>$this->inventory->getContents()
+		] : false;
 	}
 
 }
