@@ -1,6 +1,6 @@
 Vue.component('detail-bar', {
 	template: `
-		<div v-if="user.character_creation == 0 && panel.active == ''">
+		<div v-if="user.character_creation == 0">
 			<div class="o-layout c-detailbar">
 		
 				<div class="o-layout__item u-4/12">

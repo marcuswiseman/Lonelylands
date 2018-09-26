@@ -10,6 +10,11 @@ Vue.component('screen-inventory', {
 						<use :xlink:href="generateIconURL(inventory, item.item_id)" xmlns:xlink="http://www.w3.org/1999/xlink"></use>
 					</svg>
 					
+					<div class="c-inventory__item__details">
+						<p class="c-inventory__item__details--name">{{ getItemName(inventory, item.item_id) }}</p>
+						<p class="c-inventory__item__details--description">{{ getItemDesc(getItem(inventory, item.item_id).description, item.quantity) }}</p>
+					</div>
+					
 					<div class="c-inventory__item__amount">
 						{{ item.quantity }}
 					</div>
@@ -26,7 +31,7 @@ Vue.component('screen-inventory', {
 			
 			<br>
 			
-			<button @click="panel.active = ''" class="c-button c-button--dingey u-margin-bottom-small">Go Back</button><br>
+			<button @click="panel.active = ''" class="c-button c-button--dingey u-margin-bottom-small u-pin-bottom">Go Back</button><br>
 		
 		</div>
 	`,
@@ -34,7 +39,8 @@ Vue.component('screen-inventory', {
 	data() {
 		return {
 
-			getItem(inventory, id) {
+			getItem(inventory, id)
+			{
 				let item = {};
 				inventory.items.forEach(function(v) {
 					if (v.id == id) {
@@ -45,9 +51,21 @@ Vue.component('screen-inventory', {
 			},
 
 			// TODO - generateIconURL: put ? image where id is unknown
-			generateIconURL(inventory, id) {
+			generateIconURL(inventory, id)
+			{
 				let item = this.getItem(inventory, id);
 				return "#inventory-item-" + item.icon_id;
+			},
+
+			getItemName(inventory, id)
+			{
+				let name = this.getItem(inventory, id).name;
+				return name.replace('-', ' ');
+			},
+
+			getItemDesc(description, quantity)
+			{
+				return description.replace('{s}', (quantity > 1) ? 's' : '');
 			}
 
 		}
