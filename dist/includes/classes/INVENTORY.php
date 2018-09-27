@@ -2,6 +2,10 @@
 
 use Medoo\Medoo;
 
+/**
+ * Class INVENTORY
+ * Handling of survivors inventroy.
+ */
 class INVENTORY {
 
 	private $user_id;
@@ -17,7 +21,6 @@ class INVENTORY {
 		global $DB;
 		$this->user_id = $user_id;
 		$db_contents = $DB->select('tbl_inventory', '*', ['user_id'=>$user_id]);
-
 		$this->contents = $db_contents;
 		$this->items = new ITEMS();
 	}

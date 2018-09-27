@@ -2,6 +2,10 @@
 
 use Medoo\Medoo;
 
+/**
+ * Class DETAILS
+ * Survivor background details
+ */
 class DETAILS
 {
 

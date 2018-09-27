@@ -2,6 +2,10 @@
 
 use Medoo\Medoo;
 
+/**
+ * Class SURVIVOR
+ * Primary class for handling details about our survivor.
+ */
 class SURVIVOR
 {
 	public $user_id;

@@ -2,6 +2,10 @@
 
 use Medoo\Medoo;
 
+/**
+ * Class OCCUPATIONS
+ * Hardcoded dataset of occupations, uises skills class and traits.
+ */
 class OCCUPATIONS
 {
 

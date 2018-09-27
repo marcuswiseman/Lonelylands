@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Class TEMPLATE
+ * Simple 'template' viewing class, used for loading in our reusable code.
+ */
 class TEMPLATE
 {
 	protected static $_path = '';

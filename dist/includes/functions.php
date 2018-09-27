@@ -1,5 +1,9 @@
 <?php
 
+/*
+ * Small minisucal functions that serve to address only simple and globally used tasks.
+ */
+
 # RETURN OK JSON
 function ok ( $msg, $data = null )
 {

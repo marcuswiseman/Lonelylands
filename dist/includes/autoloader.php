@@ -1,5 +1,9 @@
 <?php
 
+/*
+ * Require Key librarys, set updatebase and handle autoloading.
+ */
+
 # CONSTANTS
 define('__ROOT__', dirname(dirname(__FILE__)));
 

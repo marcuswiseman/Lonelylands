@@ -2,6 +2,10 @@
 
 use Medoo\Medoo;
 
+/**
+ * Class ITEMS
+ * Handling of items. We pass this list to the client end, so the framework can pull the details it needs.
+ */
 class ITEMS {
 
 	private $items;

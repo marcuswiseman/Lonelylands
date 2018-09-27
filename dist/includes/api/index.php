@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * Essentially the main model.
+ * Ideally I should change this to auto load classes using the action variable.
+ * This would reduce the amount of clutter put in here.
+ * TODO: controller to model class loader
+ */
+
 require_once('../autoloader.php');
 
 # GATHER POST DATA

@@ -2,6 +2,11 @@
 
 use Medoo\Medoo;
 
+
+/**
+ * Class AUTH
+ * Handle login and registration.
+ */
 class AUTH
 {
 

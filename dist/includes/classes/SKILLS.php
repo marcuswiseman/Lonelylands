@@ -2,6 +2,10 @@
 
 use Medoo\Medoo;
 
+/**
+ * Class SKILLS
+ * Hardcoded dataset of skills.
+ */
 class SKILLS
 {
 
