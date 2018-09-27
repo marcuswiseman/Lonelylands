@@ -36,6 +36,8 @@ $mq-breakpoints: (
 // Fonts
 @import url('https://fonts.googleapis.com/css?family=Inconsolata:400,700');
 
+[v-cloak] {display: none}
+
 body {
 	font-family: 'Inconsolata', monospace;
 	overflow:hidden;

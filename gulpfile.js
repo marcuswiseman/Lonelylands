@@ -12,7 +12,7 @@ const streamify = require('gulp-streamify');
 const gulpif = require('gulp-if');
 const uglify = require('gulp-uglify');
 
-var styleSRC  = './src/scss/**/*.scss';
+var styleSRC = './src/scss/**/*.scss';
 var styleSRC2 = './node_modules/evocss/**/*.scss';
 var styleDIST = './dist/css/';
 
@@ -37,7 +37,7 @@ gulp.task('style', function () {
 		.pipe(rename({suffix: '.min'}))
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest(styleDIST))
-		.on('end', function() {
+		.on('end', function () {
 			console.log('[x] Finished');
 		});
 });
@@ -46,10 +46,10 @@ gulp.task('js', function () {
 	var minify = true;
 	console.log('--------------------------------------');
 	console.log('[o] Compiling all JS');
-	gulp.src(['./src/js/Classes/*.js', './src/js/Templates/*.js', './src/js/main.js'])
+	gulp.src(['./src/js/classes/*.js', './src/js/templates/*.js', './src/js/main.js'])
 		.pipe(concat('compiled.js'))
 		.pipe(gulp.dest(jsDIST))
-		.on('end', function() {
+		.on('end', function () {
 			console.log('[|] Babelify-ing JS');
 			var compiled = glob.sync(jsCOMP);
 			compiled.map(function (file) {
@@ -74,7 +74,7 @@ gulp.task('js', function () {
 					})))
 					.pipe(gulpif(minify, streamify(uglify())))
 					.pipe(gulp.dest(jsDIST))
-					.on('end', function() {
+					.on('end', function () {
 						console.log('[|] Cleaning up');
 						gulp.src(jsCOMP)
 							.pipe(clean());
@@ -82,7 +82,7 @@ gulp.task('js', function () {
 					});
 			});
 
-	});
+		});
 
 
 });
