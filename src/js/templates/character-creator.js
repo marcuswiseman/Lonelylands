@@ -97,7 +97,7 @@ Vue.component('character-creator', {
 							</div>
 							
 							<div class="o-layout__item u-6/12">
-								<button class="c-button c-button--dingey u-margin-bottom-small" name="action" value="new-character">Confirm</button>
+								<button class="c-button c-button--dingey u-margin-bottom-small" name="action" value="survivor:newCharacter">Confirm</button>
 							</div>
 
 						</div>
@@ -133,7 +133,7 @@ Vue.component('character-creator', {
 		}
 	},
 	methods: {
-		genCharacter: function() {
+		genCharacter() {
 			this.character = new CharacterGen(this.details);
 		}
 	}

@@ -123,4 +123,9 @@ function clean ( $value )
 	return $value;
 }
 
+function identity ()
+{
+	return explode('-', $_SESSION['login_token']);
+}
+
 ?>

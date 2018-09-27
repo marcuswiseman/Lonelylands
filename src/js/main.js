@@ -6,23 +6,21 @@ var dev = true;
 // Vue.config.silent = true;
 
 Array.prototype.random = function () {
-	return this[Math.floor((Math.random()*this.length))];
-}
+	return this[Math.floor(Math.random() * this.length)];
+};
 
-function randBetween(min, max, decimalPlaces=0) {
-	var rand = Math.random()*(max-min) + min;
+function randBetween(min, max, decimalPlaces = 0) {
+	var rand = Math.random() * (max - min) + min;
 	var power = Math.pow(10, decimalPlaces);
-	return Math.floor(rand*power) / power;
+	return Math.floor(rand * power) / power;
 }
 
-function getAge(dateString)
-{
+function getAge(dateString) {
 	var today = new Date();
 	var birthDate = new Date(dateString);
 	var age = today.getFullYear() - birthDate.getFullYear();
 	var m = today.getMonth() - birthDate.getMonth();
-	if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate()))
-	{
+	if (m < 0 || m === 0 && today.getDate() < birthDate.getDate()) {
 		age--;
 	}
 	return age;
@@ -51,26 +49,26 @@ var app = new Vue({
 		inventory: {},
 		details: {},
 		panel: {
-			active:''
+			active: ''
 		}
 	},
-	created: function () {
+	created() {
 		if (dev) console.log("Application started: " + this.ver);
 	},
 	methods: {
-		set_user: function (user) {
+		set_user(user) {
 			if (dev) console.log(user);
 			this.user = user;
 		},
-		set_stats: function (stats) {
+		set_stats(stats) {
 			if (dev) console.log(stats);
 			this.stats = stats;
 		},
-		set_inventory: function (inventory) {
+		set_inventory(inventory) {
 			if (dev) console.log(inventory);
 			this.inventory = inventory;
 		},
-		set_details: function (details) {
+		set_details(details) {
 			if (dev) console.log(details);
 			this.details = details;
 		}
