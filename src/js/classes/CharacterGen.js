@@ -60,9 +60,9 @@ class CharacterGen {
 		return this.occupation['jobtitle'];
 	}
 
-	display_skills(tags=false) {
+	display_skills(tags = false) {
 		var html = Array();
-		this.skills.forEach(function(val) {
+		this.skills.forEach(function (val) {
 			if (tags) {
 				html.push('<span class="c-skill-tag" title="' + val['description'] + '">' + val['name'] + '</span>');
 			} else {
@@ -76,9 +76,9 @@ class CharacterGen {
 		}
 	}
 
-	display_traits(tags=false) {
+	display_traits(tags = false) {
 		var html = Array();
-		this.traits.forEach(function(val) {
+		this.traits.forEach(function (val) {
 			if (tags) {
 				html.push('<span class="c-trait-tag" title="' + val['description'] + '">' + val['name'] + '</span>');
 			} else {

@@ -1,23 +1,18 @@
 //------------------------------------------------------------------------------------------------
 // EVOCSS
 //------------------------------------------------------------------------------------------------
-
 /*
 This is an example EvoCSS manifest file. DO NOT MODIFY THIS FILE
 DIRECTLY. Instead, copy and paste it into your own CSS directory and
 make additions, extensions, and modifications there.
 */
-
-
 // OVERRIDES
 //------------------------------------------------------------------------------------------------
-
 /*
 If you need to override any settings (Breakpoints, colors, spacing etc), here
 is the best place to do it. Alternatively, you can duplicate the relevant settings
 file from node_modules and import your modified version.
 */
-
 /*
 Example:
 
@@ -28,24 +23,23 @@ $mq-breakpoints: (
 )
 
 */
-
-
 // IMPORTS
 //------------------------------------------------------------------------------------------------
-
 // Fonts
 @import url('https://fonts.googleapis.com/css?family=Inconsolata:400,700');
 
-[v-cloak] {display: none}
+[v-cloak] {
+	display: none
+}
 
 body {
 	font-family: 'Inconsolata', monospace;
-	overflow:hidden;
-	background: rgb(37,55,61); /* Old browsers */
-	background: -moz-linear-gradient(top, rgba(37,55,61,1) 0%, rgba(56,61,55,1) 100%); /* FF3.6-15 */
-	background: -webkit-linear-gradient(top, rgba(37,55,61,1) 0%,rgba(56,61,55,1) 100%); /* Chrome10-25,Safari5.1-6 */
-	background: linear-gradient(to bottom, rgba(37,55,61,1) 0%,rgba(56,61,55,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#25373d', endColorstr='#383d37',GradientType=0 );
+	overflow: hidden;
+	background: rgb(37, 55, 61); /* Old browsers */
+	background: -moz-linear-gradient(top, rgba(37, 55, 61, 1) 0%, rgba(56, 61, 55, 1) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(37, 55, 61, 1) 0%, rgba(56, 61, 55, 1) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(37, 55, 61, 1) 0%, rgba(56, 61, 55, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#25373d', endColorstr='#383d37', GradientType=0);
 }
 
 input:-webkit-autofill {

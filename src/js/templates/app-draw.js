@@ -73,8 +73,6 @@ Vue.component('app-draw', {
 	`,
 	props: ['user', 'panel'],
 	data() {
-		return {
-
-		}
+		return {}
 	}
 });

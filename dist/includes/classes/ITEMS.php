@@ -1,12 +1,11 @@
 <?php
 
-use Medoo\Medoo;
-
 /**
  * Class ITEMS
  * Handling of items. We pass this list to the client end, so the framework can pull the details it needs.
  */
-class ITEMS {
+class ITEMS
+{
 
 	private $items;
 
@@ -24,13 +23,13 @@ class ITEMS {
 	 * Find item by id or name.
 	 * @return array
 	 */
-	public function get ($key=null)
+	public function get ( $key = null )
 	{
 		$type = gettype($key);
 		$result = null;
-		switch($type) {
+		switch ($type) {
 			case 'integer':
-				foreach($this->items as $item) {
+				foreach ($this->items as $item) {
 					if ($item['id'] == $key) {
 						$result = $item;
 						break;
@@ -38,7 +37,7 @@ class ITEMS {
 				}
 				break;
 			case 'string':
-				foreach($this->items as $item) {
+				foreach ($this->items as $item) {
 					if ($item['name'] == $key) {
 						$result = $item;
 						break;

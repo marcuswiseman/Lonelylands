@@ -1,7 +1,5 @@
 <?php
 
-use Medoo\Medoo;
-
 /**
  * Class TRAITS
  * Hardcoded dataset of survivor traits.
@@ -83,8 +81,9 @@ class TRAITS
 	/**
 	 * @return mixed
 	 */
-	public function get_random() {
-		return $this->traits[rand(0, count($this->traits)-1)];
+	public function get_random ()
+	{
+		return $this->traits[rand(0, count($this->traits) - 1)];
 	}
 
 	/**

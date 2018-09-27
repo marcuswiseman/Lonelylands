@@ -1,7 +1,5 @@
 <?php
 
-use Medoo\Medoo;
-
 /**
  * Class SKILLS
  * Hardcoded dataset of skills.
@@ -72,14 +70,15 @@ class SKILLS
 		];
 	}
 
-	public function get_random() {
-		return $this->skills[rand(0, count($this->skills)-1)];
+	public function get_random ()
+	{
+		return $this->skills[rand(0, count($this->skills) - 1)];
 	}
 
 	/**
 	 * @param null $val
 	 */
-	public  function get ( $val = null )
+	public function get ( $val = null )
 	{
 		$result = [];
 		if (isset($val) && gettype($val) == "array") {

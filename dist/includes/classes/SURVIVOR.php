@@ -39,33 +39,6 @@ class SURVIVOR
 	}
 
 	/**
-	 * @return array|bool|mixed
-	 */
-	public function user ()
-	{
-		return !empty($this->user) ? $this->user : false;
-	}
-
-	/**
-	 * @return array|bool|mixed
-	 */
-	public function stats ()
-	{
-		return !empty($this->stats) ? $this->stats : false;
-	}
-
-	/**
-	 * @return array|bool|mixed
-	 */
-	public function inventory ()
-	{
-		return !empty($this->inventory) ? [
-			'items'=>$this->inventory->getItems()->get(),
-			'contents'=>$this->inventory->getContents()
-		] : false;
-	}
-
-	/**
 	 * Create a new character.
 	 */
 	public static function do_newCharacter ( $DB, $data )
@@ -141,6 +114,33 @@ class SURVIVOR
 				'msg' => 'Character successfuly created, good luck out there.'
 			]);
 		}
+	}
+
+	/**
+	 * @return array|bool|mixed
+	 */
+	public function user ()
+	{
+		return !empty($this->user) ? $this->user : false;
+	}
+
+	/**
+	 * @return array|bool|mixed
+	 */
+	public function stats ()
+	{
+		return !empty($this->stats) ? $this->stats : false;
+	}
+
+	/**
+	 * @return array|bool|mixed
+	 */
+	public function inventory ()
+	{
+		return !empty($this->inventory) ? [
+			'items' => $this->inventory->getItems()->get(),
+			'contents' => $this->inventory->getContents()
+		] : false;
 	}
 
 }

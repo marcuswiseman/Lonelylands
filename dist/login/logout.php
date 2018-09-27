@@ -2,7 +2,7 @@
 session_start();
 setcookie(
 	'login_token',
-	$user[0]['id'].'-'.$token,
+	$user[0]['id'] . '-' . $token,
 	time() - 1000,
 	"/"
 );

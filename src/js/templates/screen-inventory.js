@@ -39,10 +39,9 @@ Vue.component('screen-inventory', {
 	data() {
 		return {
 
-			getItem(inventory, id)
-			{
+			getItem(inventory, id) {
 				let item = {};
-				inventory.items.forEach(function(v) {
+				inventory.items.forEach(function (v) {
 					if (v.id == id) {
 						item = v;
 					}
@@ -51,21 +50,18 @@ Vue.component('screen-inventory', {
 			},
 
 			// TODO - generateIconURL: put ? image where id is unknown
-			generateIconURL(inventory, id)
-			{
+			generateIconURL(inventory, id) {
 				let item = this.getItem(inventory, id);
 				return "#inventory-item-" + item.icon_id;
 			},
 
-			getItemName(inventory, id)
-			{
+			getItemName(inventory, id) {
 				let name = this.getItem(inventory, id).name;
 				return name.replace('-', ' ');
 			},
 
-			getItemDesc(description, quantity)
-			{
-				return description.replace('{s}', (quantity > 1) ? 's' : '');
+			getItemDesc(description, quantity) {
+				return description.replace('{s}', quantity > 1 ? 's' : '');
 			}
 
 		}

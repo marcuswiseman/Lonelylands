@@ -22,8 +22,6 @@ Vue.component('detail-bar', {
 	`,
 	props: ['user', 'stats', 'panel'],
 	data() {
-		return {
-
-		}
+		return {}
 	}
 });

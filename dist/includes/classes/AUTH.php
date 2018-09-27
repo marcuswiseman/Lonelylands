@@ -11,17 +11,6 @@ class AUTH
 {
 
 	/**
-	 * Generate a random token.
-	 * @param $size
-	 * @return string
-	 * @throws Exception
-	 */
-	public static function token ( $size=32 ) {
-		$bytes = random_bytes($size);
-		return bin2hex($bytes);
-	}
-
-	/**
 	 * Login using credentials from post data.
 	 * @param $params
 	 */
@@ -32,18 +21,18 @@ class AUTH
 			&& isset($params->email)
 			&& isset($params->password)) {
 
-			$user = $DB->select('tbl_users', ['id', 'password'], ['email'=>$params->email],['limit'=>1]);
+			$user = $DB->select('tbl_users', ['id', 'password'], ['email' => $params->email], ['limit' => 1]);
 
 			if (isset($user) && !empty($user) && password_verify($params->password, $user[0]['password'])) {
 				$token = self::token();
 				setcookie(
 					'login_token',
-					$user[0]['id'].'-'.$token,
+					$user[0]['id'] . '-' . $token,
 					time() + (86400 * 365),
 					"/"
 				);
-				$_SESSION['login_token'] = $user[0]['id'].'-'.$token;
-				$DB->update('tbl_users', ['login_token'=>$token, 'ip_address'=>ip_address()], ['id'=>$user[0]['id']]);
+				$_SESSION['login_token'] = $user[0]['id'] . '-' . $token;
+				$DB->update('tbl_users', ['login_token' => $token, 'ip_address' => ip_address()], ['id' => $user[0]['id']]);
 				return ok('Systems are go.', [
 					'action' => 'redirect',
 					'url' => '../'
@@ -55,6 +44,18 @@ class AUTH
 		} else {
 			error('No credentials provided.');
 		}
+	}
+
+	/**
+	 * Generate a random token.
+	 * @param $size
+	 * @return string
+	 * @throws Exception
+	 */
+	public static function token ( $size = 32 )
+	{
+		$bytes = random_bytes($size);
+		return bin2hex($bytes);
 	}
 
 	/**
