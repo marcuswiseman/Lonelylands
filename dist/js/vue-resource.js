@@ -5,1587 +5,1559 @@
  */
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-		typeof define === 'function' && define.amd ? define(factory) :
-			(global.VueResource = factory());
-}(this, function () {
-	'use strict';
-
-	/**
-	 * Promises/A+ polyfill v1.1.4 (https://github.com/bramstein/promis)
-	 */
-
-	var RESOLVED = 0;
-	var REJECTED = 1;
-	var PENDING = 2;
-
-	function Promise$1(executor) {
-
-		this.state = PENDING;
-		this.value = undefined;
-		this.deferred = [];
-
-		var promise = this;
-
-		try {
-			executor(function (x) {
-				promise.resolve(x);
-			}, function (r) {
-				promise.reject(r);
-			});
-		} catch (e) {
-			promise.reject(e);
-		}
-	}
-
-	Promise$1.reject = function (r) {
-		return new Promise$1(function (resolve, reject) {
-			reject(r);
-		});
-	};
-
-	Promise$1.resolve = function (x) {
-		return new Promise$1(function (resolve, reject) {
-			resolve(x);
-		});
-	};
-
-	Promise$1.all = function all(iterable) {
-		return new Promise$1(function (resolve, reject) {
-			var count = 0, result = [];
-
-			if (iterable.length === 0) {
-				resolve(result);
-			}
-
-			function resolver(i) {
-				return function (x) {
-					result[i] = x;
-					count += 1;
-
-					if (count === iterable.length) {
-						resolve(result);
-					}
-				};
-			}
-
-			for (var i = 0; i < iterable.length; i += 1) {
-				Promise$1.resolve(iterable[i]).then(resolver(i), reject);
-			}
-		});
-	};
-
-	Promise$1.race = function race(iterable) {
-		return new Promise$1(function (resolve, reject) {
-			for (var i = 0; i < iterable.length; i += 1) {
-				Promise$1.resolve(iterable[i]).then(resolve, reject);
-			}
-		});
-	};
-
-	var p = Promise$1.prototype;
-
-	p.resolve = function resolve(x) {
-		var promise = this;
-
-		if (promise.state === PENDING) {
-			if (x === promise) {
-				throw new TypeError('Promise settled with itself.');
-			}
-
-			var called = false;
-
-			try {
-				var then = x && x['then'];
-
-				if (x !== null && typeof x === 'object' && typeof then === 'function') {
-					then.call(x, function (x) {
-						if (!called) {
-							promise.resolve(x);
-						}
-						called = true;
-
-					}, function (r) {
-						if (!called) {
-							promise.reject(r);
-						}
-						called = true;
-					});
-					return;
-				}
-			} catch (e) {
-				if (!called) {
-					promise.reject(e);
-				}
-				return;
-			}
-
-			promise.state = RESOLVED;
-			promise.value = x;
-			promise.notify();
-		}
-	};
-
-	p.reject = function reject(reason) {
-		var promise = this;
-
-		if (promise.state === PENDING) {
-			if (reason === promise) {
-				throw new TypeError('Promise settled with itself.');
-			}
-
-			promise.state = REJECTED;
-			promise.value = reason;
-			promise.notify();
-		}
-	};
-
-	p.notify = function notify() {
-		var promise = this;
-
-		nextTick(function () {
-			if (promise.state !== PENDING) {
-				while (promise.deferred.length) {
-					var deferred = promise.deferred.shift(),
-						onResolved = deferred[0],
-						onRejected = deferred[1],
-						resolve = deferred[2],
-						reject = deferred[3];
-
-					try {
-						if (promise.state === RESOLVED) {
-							if (typeof onResolved === 'function') {
-								resolve(onResolved.call(undefined, promise.value));
-							} else {
-								resolve(promise.value);
-							}
-						} else if (promise.state === REJECTED) {
-							if (typeof onRejected === 'function') {
-								resolve(onRejected.call(undefined, promise.value));
-							} else {
-								reject(promise.value);
-							}
-						}
-					} catch (e) {
-						reject(e);
-					}
-				}
-			}
-		});
-	};
-
-	p.then = function then(onResolved, onRejected) {
-		var promise = this;
-
-		return new Promise$1(function (resolve, reject) {
-			promise.deferred.push([onResolved, onRejected, resolve, reject]);
-			promise.notify();
-		});
-	};
-
-	p.catch = function (onRejected) {
-		return this.then(undefined, onRejected);
-	};
-
-	/**
-	 * Promise adapter.
-	 */
-
-	if (typeof Promise === 'undefined') {
-		window.Promise = Promise$1;
-	}
-
-	function PromiseObj(executor, context) {
-
-		if (executor instanceof Promise) {
-			this.promise = executor;
-		} else {
-			this.promise = new Promise(executor.bind(context));
-		}
-
-		this.context = context;
-	}
-
-	PromiseObj.all = function (iterable, context) {
-		return new PromiseObj(Promise.all(iterable), context);
-	};
-
-	PromiseObj.resolve = function (value, context) {
-		return new PromiseObj(Promise.resolve(value), context);
-	};
-
-	PromiseObj.reject = function (reason, context) {
-		return new PromiseObj(Promise.reject(reason), context);
-	};
-
-	PromiseObj.race = function (iterable, context) {
-		return new PromiseObj(Promise.race(iterable), context);
-	};
-
-	var p$1 = PromiseObj.prototype;
-
-	p$1.bind = function (context) {
-		this.context = context;
-		return this;
-	};
-
-	p$1.then = function (fulfilled, rejected) {
-
-		if (fulfilled && fulfilled.bind && this.context) {
-			fulfilled = fulfilled.bind(this.context);
-		}
-
-		if (rejected && rejected.bind && this.context) {
-			rejected = rejected.bind(this.context);
-		}
-
-		return new PromiseObj(this.promise.then(fulfilled, rejected), this.context);
-	};
-
-	p$1.catch = function (rejected) {
-
-		if (rejected && rejected.bind && this.context) {
-			rejected = rejected.bind(this.context);
-		}
-
-		return new PromiseObj(this.promise.catch(rejected), this.context);
-	};
-
-	p$1.finally = function (callback) {
-
-		return this.then(function (value) {
-				callback.call(this);
-				return value;
-			}, function (reason) {
-				callback.call(this);
-				return Promise.reject(reason);
-			}
-		);
-	};
-
-	/**
-	 * Utility functions.
-	 */
-
-	var ref = {};
-	var hasOwnProperty = ref.hasOwnProperty;
-	var ref$1 = [];
-	var slice = ref$1.slice;
-	var debug = false, ntick;
-
-	var inBrowser = typeof window !== 'undefined';
-
-	function Util(ref) {
-		var config = ref.config;
-		var nextTick = ref.nextTick;
-
-		ntick = nextTick;
-		debug = config.debug || !config.silent;
-	}
-
-	function warn(msg) {
-		if (typeof console !== 'undefined' && debug) {
-			console.warn('[VueResource warn]: ' + msg);
-		}
-	}
-
-	function error(msg) {
-		if (typeof console !== 'undefined') {
-			console.error(msg);
-		}
-	}
-
-	function nextTick(cb, ctx) {
-		return ntick(cb, ctx);
-	}
-
-	function trim(str) {
-		return str ? str.replace(/^\s*|\s*$/g, '') : '';
-	}
-
-	function trimEnd(str, chars) {
-
-		if (str && chars === undefined) {
-			return str.replace(/\s+$/, '');
-		}
-
-		if (!str || !chars) {
-			return str;
-		}
-
-		return str.replace(new RegExp("[" + chars + "]+$"), '');
-	}
-
-	function toLower(str) {
-		return str ? str.toLowerCase() : '';
-	}
-
-	function toUpper(str) {
-		return str ? str.toUpperCase() : '';
-	}
-
-	var isArray = Array.isArray;
-
-	function isString(val) {
-		return typeof val === 'string';
-	}
-
-	function isFunction(val) {
-		return typeof val === 'function';
-	}
-
-	function isObject(obj) {
-		return obj !== null && typeof obj === 'object';
-	}
-
-	function isPlainObject(obj) {
-		return isObject(obj) && Object.getPrototypeOf(obj) == Object.prototype;
-	}
-
-	function isBlob(obj) {
-		return typeof Blob !== 'undefined' && obj instanceof Blob;
-	}
-
-	function isFormData(obj) {
-		return typeof FormData !== 'undefined' && obj instanceof FormData;
-	}
-
-	function when(value, fulfilled, rejected) {
-
-		var promise = PromiseObj.resolve(value);
-
-		if (arguments.length < 2) {
-			return promise;
-		}
-
-		return promise.then(fulfilled, rejected);
-	}
-
-	function options(fn, obj, opts) {
-
-		opts = opts || {};
-
-		if (isFunction(opts)) {
-			opts = opts.call(obj);
-		}
-
-		return merge(fn.bind({$vm: obj, $options: opts}), fn, {$options: opts});
-	}
-
-	function each(obj, iterator) {
-
-		var i, key;
-
-		if (isArray(obj)) {
-			for (i = 0; i < obj.length; i++) {
-				iterator.call(obj[i], obj[i], i);
-			}
-		} else if (isObject(obj)) {
-			for (key in obj) {
-				if (hasOwnProperty.call(obj, key)) {
-					iterator.call(obj[key], obj[key], key);
-				}
-			}
-		}
-
-		return obj;
-	}
-
-	var assign = Object.assign || _assign;
-
-	function merge(target) {
-
-		var args = slice.call(arguments, 1);
-
-		args.forEach(function (source) {
-			_merge(target, source, true);
-		});
-
-		return target;
-	}
-
-	function defaults(target) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
+    (global.VueResource = factory());
+}(this, (function () { 'use strict';
+
+    /**
+     * Promises/A+ polyfill v1.1.4 (https://github.com/bramstein/promis)
+     */
+
+    var RESOLVED = 0;
+    var REJECTED = 1;
+    var PENDING = 2;
+
+    function Promise$1(executor) {
+
+        this.state = PENDING;
+        this.value = undefined;
+        this.deferred = [];
+
+        var promise = this;
+
+        try {
+            executor(function (x) {
+                promise.resolve(x);
+            }, function (r) {
+                promise.reject(r);
+            });
+        } catch (e) {
+            promise.reject(e);
+        }
+    }
+
+    Promise$1.reject = function (r) {
+        return new Promise$1(function (resolve, reject) {
+            reject(r);
+        });
+    };
+
+    Promise$1.resolve = function (x) {
+        return new Promise$1(function (resolve, reject) {
+            resolve(x);
+        });
+    };
+
+    Promise$1.all = function all(iterable) {
+        return new Promise$1(function (resolve, reject) {
+            var count = 0, result = [];
+
+            if (iterable.length === 0) {
+                resolve(result);
+            }
+
+            function resolver(i) {
+                return function (x) {
+                    result[i] = x;
+                    count += 1;
+
+                    if (count === iterable.length) {
+                        resolve(result);
+                    }
+                };
+            }
+
+            for (var i = 0; i < iterable.length; i += 1) {
+                Promise$1.resolve(iterable[i]).then(resolver(i), reject);
+            }
+        });
+    };
+
+    Promise$1.race = function race(iterable) {
+        return new Promise$1(function (resolve, reject) {
+            for (var i = 0; i < iterable.length; i += 1) {
+                Promise$1.resolve(iterable[i]).then(resolve, reject);
+            }
+        });
+    };
+
+    var p = Promise$1.prototype;
+
+    p.resolve = function resolve(x) {
+        var promise = this;
+
+        if (promise.state === PENDING) {
+            if (x === promise) {
+                throw new TypeError('Promise settled with itself.');
+            }
+
+            var called = false;
+
+            try {
+                var then = x && x['then'];
+
+                if (x !== null && typeof x === 'object' && typeof then === 'function') {
+                    then.call(x, function (x) {
+                        if (!called) {
+                            promise.resolve(x);
+                        }
+                        called = true;
+
+                    }, function (r) {
+                        if (!called) {
+                            promise.reject(r);
+                        }
+                        called = true;
+                    });
+                    return;
+                }
+            } catch (e) {
+                if (!called) {
+                    promise.reject(e);
+                }
+                return;
+            }
+
+            promise.state = RESOLVED;
+            promise.value = x;
+            promise.notify();
+        }
+    };
+
+    p.reject = function reject(reason) {
+        var promise = this;
+
+        if (promise.state === PENDING) {
+            if (reason === promise) {
+                throw new TypeError('Promise settled with itself.');
+            }
+
+            promise.state = REJECTED;
+            promise.value = reason;
+            promise.notify();
+        }
+    };
+
+    p.notify = function notify() {
+        var promise = this;
+
+        nextTick(function () {
+            if (promise.state !== PENDING) {
+                while (promise.deferred.length) {
+                    var deferred = promise.deferred.shift(),
+                        onResolved = deferred[0],
+                        onRejected = deferred[1],
+                        resolve = deferred[2],
+                        reject = deferred[3];
+
+                    try {
+                        if (promise.state === RESOLVED) {
+                            if (typeof onResolved === 'function') {
+                                resolve(onResolved.call(undefined, promise.value));
+                            } else {
+                                resolve(promise.value);
+                            }
+                        } else if (promise.state === REJECTED) {
+                            if (typeof onRejected === 'function') {
+                                resolve(onRejected.call(undefined, promise.value));
+                            } else {
+                                reject(promise.value);
+                            }
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                }
+            }
+        });
+    };
+
+    p.then = function then(onResolved, onRejected) {
+        var promise = this;
+
+        return new Promise$1(function (resolve, reject) {
+            promise.deferred.push([onResolved, onRejected, resolve, reject]);
+            promise.notify();
+        });
+    };
+
+    p.catch = function (onRejected) {
+        return this.then(undefined, onRejected);
+    };
+
+    /**
+     * Promise adapter.
+     */
+
+    if (typeof Promise === 'undefined') {
+        window.Promise = Promise$1;
+    }
+
+    function PromiseObj(executor, context) {
+
+        if (executor instanceof Promise) {
+            this.promise = executor;
+        } else {
+            this.promise = new Promise(executor.bind(context));
+        }
+
+        this.context = context;
+    }
+
+    PromiseObj.all = function (iterable, context) {
+        return new PromiseObj(Promise.all(iterable), context);
+    };
+
+    PromiseObj.resolve = function (value, context) {
+        return new PromiseObj(Promise.resolve(value), context);
+    };
+
+    PromiseObj.reject = function (reason, context) {
+        return new PromiseObj(Promise.reject(reason), context);
+    };
+
+    PromiseObj.race = function (iterable, context) {
+        return new PromiseObj(Promise.race(iterable), context);
+    };
+
+    var p$1 = PromiseObj.prototype;
+
+    p$1.bind = function (context) {
+        this.context = context;
+        return this;
+    };
+
+    p$1.then = function (fulfilled, rejected) {
+
+        if (fulfilled && fulfilled.bind && this.context) {
+            fulfilled = fulfilled.bind(this.context);
+        }
+
+        if (rejected && rejected.bind && this.context) {
+            rejected = rejected.bind(this.context);
+        }
+
+        return new PromiseObj(this.promise.then(fulfilled, rejected), this.context);
+    };
+
+    p$1.catch = function (rejected) {
+
+        if (rejected && rejected.bind && this.context) {
+            rejected = rejected.bind(this.context);
+        }
+
+        return new PromiseObj(this.promise.catch(rejected), this.context);
+    };
+
+    p$1.finally = function (callback) {
+
+        return this.then(function (value) {
+            callback.call(this);
+            return value;
+        }, function (reason) {
+            callback.call(this);
+            return Promise.reject(reason);
+        }
+        );
+    };
+
+    /**
+     * Utility functions.
+     */
+
+    var ref = {};
+    var hasOwnProperty = ref.hasOwnProperty;
+    var ref$1 = [];
+    var slice = ref$1.slice;
+    var debug = false, ntick;
+
+    var inBrowser = typeof window !== 'undefined';
+
+    function Util (ref) {
+        var config = ref.config;
+        var nextTick = ref.nextTick;
+
+        ntick = nextTick;
+        debug = config.debug || !config.silent;
+    }
+
+    function warn(msg) {
+        if (typeof console !== 'undefined' && debug) {
+            console.warn('[VueResource warn]: ' + msg);
+        }
+    }
+
+    function error(msg) {
+        if (typeof console !== 'undefined') {
+            console.error(msg);
+        }
+    }
+
+    function nextTick(cb, ctx) {
+        return ntick(cb, ctx);
+    }
+
+    function trim(str) {
+        return str ? str.replace(/^\s*|\s*$/g, '') : '';
+    }
+
+    function trimEnd(str, chars) {
+
+        if (str && chars === undefined) {
+            return str.replace(/\s+$/, '');
+        }
+
+        if (!str || !chars) {
+            return str;
+        }
+
+        return str.replace(new RegExp(("[" + chars + "]+$")), '');
+    }
+
+    function toLower(str) {
+        return str ? str.toLowerCase() : '';
+    }
+
+    function toUpper(str) {
+        return str ? str.toUpperCase() : '';
+    }
+
+    var isArray = Array.isArray;
+
+    function isString(val) {
+        return typeof val === 'string';
+    }
+
+    function isFunction(val) {
+        return typeof val === 'function';
+    }
+
+    function isObject(obj) {
+        return obj !== null && typeof obj === 'object';
+    }
+
+    function isPlainObject(obj) {
+        return isObject(obj) && Object.getPrototypeOf(obj) == Object.prototype;
+    }
+
+    function isBlob(obj) {
+        return typeof Blob !== 'undefined' && obj instanceof Blob;
+    }
+
+    function isFormData(obj) {
+        return typeof FormData !== 'undefined' && obj instanceof FormData;
+    }
+
+    function when(value, fulfilled, rejected) {
+
+        var promise = PromiseObj.resolve(value);
+
+        if (arguments.length < 2) {
+            return promise;
+        }
+
+        return promise.then(fulfilled, rejected);
+    }
+
+    function options(fn, obj, opts) {
+
+        opts = opts || {};
+
+        if (isFunction(opts)) {
+            opts = opts.call(obj);
+        }
+
+        return merge(fn.bind({$vm: obj, $options: opts}), fn, {$options: opts});
+    }
+
+    function each(obj, iterator) {
+
+        var i, key;
+
+        if (isArray(obj)) {
+            for (i = 0; i < obj.length; i++) {
+                iterator.call(obj[i], obj[i], i);
+            }
+        } else if (isObject(obj)) {
+            for (key in obj) {
+                if (hasOwnProperty.call(obj, key)) {
+                    iterator.call(obj[key], obj[key], key);
+                }
+            }
+        }
+
+        return obj;
+    }
+
+    var assign = Object.assign || _assign;
+
+    function merge(target) {
+
+        var args = slice.call(arguments, 1);
+
+        args.forEach(function (source) {
+            _merge(target, source, true);
+        });
+
+        return target;
+    }
+
+    function defaults(target) {
 
-		var args = slice.call(arguments, 1);
-
-		args.forEach(function (source) {
-
-			for (var key in source) {
-				if (target[key] === undefined) {
-					target[key] = source[key];
-				}
-			}
-
-		});
-
-		return target;
-	}
-
-	function _assign(target) {
-
-		var args = slice.call(arguments, 1);
-
-		args.forEach(function (source) {
-			_merge(target, source);
-		});
+        var args = slice.call(arguments, 1);
+
+        args.forEach(function (source) {
+
+            for (var key in source) {
+                if (target[key] === undefined) {
+                    target[key] = source[key];
+                }
+            }
+
+        });
+
+        return target;
+    }
+
+    function _assign(target) {
+
+        var args = slice.call(arguments, 1);
+
+        args.forEach(function (source) {
+            _merge(target, source);
+        });
 
-		return target;
-	}
-
-	function _merge(target, source, deep) {
-		for (var key in source) {
-			if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
-				if (isPlainObject(source[key]) && !isPlainObject(target[key])) {
-					target[key] = {};
-				}
-				if (isArray(source[key]) && !isArray(target[key])) {
-					target[key] = [];
-				}
-				_merge(target[key], source[key], deep);
-			} else if (source[key] !== undefined) {
-				target[key] = source[key];
-			}
-		}
-	}
-
-	/**
-	 * Root Prefix Transform.
-	 */
-
-	function root(options$$1, next) {
-
-		var url = next(options$$1);
-
-		if (isString(options$$1.root) && !/^(https?:)?\//.test(url)) {
-			url = trimEnd(options$$1.root, '/') + '/' + url;
-		}
-
-		return url;
-	}
-
-	/**
-	 * Query Parameter Transform.
-	 */
-
-	function query(options$$1, next) {
-
-		var urlParams = Object.keys(Url.options.params), query = {}, url = next(options$$1);
-
-		each(options$$1.params, function (value, key) {
-			if (urlParams.indexOf(key) === -1) {
-				query[key] = value;
-			}
-		});
-
-		query = Url.params(query);
-
-		if (query) {
-			url += (url.indexOf('?') == -1 ? '?' : '&') + query;
-		}
-
-		return url;
-	}
-
-	/**
-	 * URL Template v2.0.6 (https://github.com/bramstein/url-template)
-	 */
-
-	function expand(url, params, variables) {
-
-		var tmpl = parse(url), expanded = tmpl.expand(params);
-
-		if (variables) {
-			variables.push.apply(variables, tmpl.vars);
-		}
-
-		return expanded;
-	}
-
-	function parse(template) {
-
-		var operators = ['+', '#', '.', '/', ';', '?', '&'], variables = [];
-
-		return {
-			vars: variables,
-			expand(context) {
-				return template.replace(/\{([^{}]+)\}|([^{}]+)/g, function (_, expression, literal) {
-					if (expression) {
-
-						var operator = null, values = [];
-
-						if (operators.indexOf(expression.charAt(0)) !== -1) {
-							operator = expression.charAt(0);
-							expression = expression.substr(1);
-						}
-
-						expression.split(/,/g).forEach(function (variable) {
-							var tmp = /([^:*]*)(?::(\d+)|(\*))?/.exec(variable);
-							values.push.apply(values, getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
-							variables.push(tmp[1]);
-						});
-
-						if (operator && operator !== '+') {
-
-							var separator = ',';
-
-							if (operator === '?') {
-								separator = '&';
-							} else if (operator !== '#') {
-								separator = operator;
-							}
-
-							return (values.length !== 0 ? operator : '') + values.join(separator);
-						} else {
-							return values.join(',');
-						}
-
-					} else {
-						return encodeReserved(literal);
-					}
-				});
-			}
-		};
-	}
-
-	function getValues(context, operator, key, modifier) {
-
-		var value = context[key], result = [];
-
-		if (isDefined(value) && value !== '') {
-			if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-				value = value.toString();
-
-				if (modifier && modifier !== '*') {
-					value = value.substring(0, parseInt(modifier, 10));
-				}
-
-				result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : null));
-			} else {
-				if (modifier === '*') {
-					if (Array.isArray(value)) {
-						value.filter(isDefined).forEach(function (value) {
-							result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : null));
-						});
-					} else {
-						Object.keys(value).forEach(function (k) {
-							if (isDefined(value[k])) {
-								result.push(encodeValue(operator, value[k], k));
-							}
-						});
-					}
-				} else {
-					var tmp = [];
-
-					if (Array.isArray(value)) {
-						value.filter(isDefined).forEach(function (value) {
-							tmp.push(encodeValue(operator, value));
-						});
-					} else {
-						Object.keys(value).forEach(function (k) {
-							if (isDefined(value[k])) {
-								tmp.push(encodeURIComponent(k));
-								tmp.push(encodeValue(operator, value[k].toString()));
-							}
-						});
-					}
-
-					if (isKeyOperator(operator)) {
-						result.push(encodeURIComponent(key) + '=' + tmp.join(','));
-					} else if (tmp.length !== 0) {
-						result.push(tmp.join(','));
-					}
-				}
-			}
-		} else {
-			if (operator === ';') {
-				result.push(encodeURIComponent(key));
-			} else if (value === '' && (operator === '&' || operator === '?')) {
-				result.push(encodeURIComponent(key) + '=');
-			} else if (value === '') {
-				result.push('');
-			}
-		}
-
-		return result;
-	}
-
-	function isDefined(value) {
-		return value !== undefined && value !== null;
-	}
-
-	function isKeyOperator(operator) {
-		return operator === ';' || operator === '&' || operator === '?';
-	}
-
-	function encodeValue(operator, value, key) {
-
-		value = operator === '+' || operator === '#' ? encodeReserved(value) : encodeURIComponent(value);
-
-		if (key) {
-			return encodeURIComponent(key) + '=' + value;
-		} else {
-			return value;
-		}
-	}
-
-	function encodeReserved(str) {
-		return str.split(/(%[0-9A-Fa-f]{2})/g).map(function (part) {
-			if (!/%[0-9A-Fa-f]/.test(part)) {
-				part = encodeURI(part);
-			}
-			return part;
-		}).join('');
-	}
-
-	/**
-	 * URL Template (RFC 6570) Transform.
-	 */
-
-	function template(options) {
-
-		var variables = [], url = expand(options.url, options.params, variables);
-
-		variables.forEach(function (key) {
-			delete options.params[key];
-		});
-
-		return url;
-	}
-
-	/**
-	 * Service for URL templating.
-	 */
-
-	function Url(url, params) {
-
-		var self = this || {}, options$$1 = url, transform;
-
-		if (isString(url)) {
-			options$$1 = {url, params};
-		}
-
-		options$$1 = merge({}, Url.options, self.$options, options$$1);
-
-		Url.transforms.forEach(function (handler) {
-
-			if (isString(handler)) {
-				handler = Url.transform[handler];
-			}
-
-			if (isFunction(handler)) {
-				transform = factory(handler, transform, self.$vm);
-			}
-
-		});
-
-		return transform(options$$1);
-	}
-
-	/**
-	 * Url options.
-	 */
-
-	Url.options = {
-		url: '',
-		root: null,
-		params: {}
-	};
-
-	/**
-	 * Url transforms.
-	 */
-
-	Url.transform = {template, query, root};
-	Url.transforms = ['template', 'query', 'root'];
-
-	/**
-	 * Encodes a Url parameter string.
-	 *
-	 * @param {Object} obj
-	 */
-
-	Url.params = function (obj) {
-
-		var params = [], escape = encodeURIComponent;
-
-		params.add = function (key, value) {
-
-			if (isFunction(value)) {
-				value = value();
-			}
-
-			if (value === null) {
-				value = '';
-			}
-
-			this.push(escape(key) + '=' + escape(value));
-		};
-
-		serialize(params, obj);
-
-		return params.join('&').replace(/%20/g, '+');
-	};
-
-	/**
-	 * Parse a URL and return its components.
-	 *
-	 * @param {String} url
-	 */
-
-	Url.parse = function (url) {
-
-		var el = document.createElement('a');
-
-		if (document.documentMode) {
-			el.href = url;
-			url = el.href;
-		}
-
-		el.href = url;
-
-		return {
-			href: el.href,
-			protocol: el.protocol ? el.protocol.replace(/:$/, '') : '',
-			port: el.port,
-			host: el.host,
-			hostname: el.hostname,
-			pathname: el.pathname.charAt(0) === '/' ? el.pathname : '/' + el.pathname,
-			search: el.search ? el.search.replace(/^\?/, '') : '',
-			hash: el.hash ? el.hash.replace(/^#/, '') : ''
-		};
-	};
-
-	function factory(handler, next, vm) {
-		return function (options$$1) {
-			return handler.call(vm, options$$1, next);
-		};
-	}
-
-	function serialize(params, obj, scope) {
-
-		var array = isArray(obj), plain = isPlainObject(obj), hash;
-
-		each(obj, function (value, key) {
-
-			hash = isObject(value) || isArray(value);
-
-			if (scope) {
-				key = scope + '[' + (plain || hash ? key : '') + ']';
-			}
-
-			if (!scope && array) {
-				params.add(value.name, value.value);
-			} else if (hash) {
-				serialize(params, value, key);
-			} else {
-				params.add(key, value);
-			}
-		});
-	}
-
-	/**
-	 * XDomain client (Internet Explorer).
-	 */
+        return target;
+    }
+
+    function _merge(target, source, deep) {
+        for (var key in source) {
+            if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
+                if (isPlainObject(source[key]) && !isPlainObject(target[key])) {
+                    target[key] = {};
+                }
+                if (isArray(source[key]) && !isArray(target[key])) {
+                    target[key] = [];
+                }
+                _merge(target[key], source[key], deep);
+            } else if (source[key] !== undefined) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    /**
+     * Root Prefix Transform.
+     */
+
+    function root (options$$1, next) {
+
+        var url = next(options$$1);
+
+        if (isString(options$$1.root) && !/^(https?:)?\//.test(url)) {
+            url = trimEnd(options$$1.root, '/') + '/' + url;
+        }
+
+        return url;
+    }
+
+    /**
+     * Query Parameter Transform.
+     */
+
+    function query (options$$1, next) {
+
+        var urlParams = Object.keys(Url.options.params), query = {}, url = next(options$$1);
+
+        each(options$$1.params, function (value, key) {
+            if (urlParams.indexOf(key) === -1) {
+                query[key] = value;
+            }
+        });
+
+        query = Url.params(query);
+
+        if (query) {
+            url += (url.indexOf('?') == -1 ? '?' : '&') + query;
+        }
+
+        return url;
+    }
+
+    /**
+     * URL Template v2.0.6 (https://github.com/bramstein/url-template)
+     */
+
+    function expand(url, params, variables) {
+
+        var tmpl = parse(url), expanded = tmpl.expand(params);
+
+        if (variables) {
+            variables.push.apply(variables, tmpl.vars);
+        }
+
+        return expanded;
+    }
+
+    function parse(template) {
+
+        var operators = ['+', '#', '.', '/', ';', '?', '&'], variables = [];
+
+        return {
+            vars: variables,
+            expand: function expand(context) {
+                return template.replace(/\{([^{}]+)\}|([^{}]+)/g, function (_, expression, literal) {
+                    if (expression) {
+
+                        var operator = null, values = [];
+
+                        if (operators.indexOf(expression.charAt(0)) !== -1) {
+                            operator = expression.charAt(0);
+                            expression = expression.substr(1);
+                        }
+
+                        expression.split(/,/g).forEach(function (variable) {
+                            var tmp = /([^:*]*)(?::(\d+)|(\*))?/.exec(variable);
+                            values.push.apply(values, getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
+                            variables.push(tmp[1]);
+                        });
+
+                        if (operator && operator !== '+') {
+
+                            var separator = ',';
+
+                            if (operator === '?') {
+                                separator = '&';
+                            } else if (operator !== '#') {
+                                separator = operator;
+                            }
+
+                            return (values.length !== 0 ? operator : '') + values.join(separator);
+                        } else {
+                            return values.join(',');
+                        }
+
+                    } else {
+                        return encodeReserved(literal);
+                    }
+                });
+            }
+        };
+    }
+
+    function getValues(context, operator, key, modifier) {
+
+        var value = context[key], result = [];
+
+        if (isDefined(value) && value !== '') {
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+                value = value.toString();
+
+                if (modifier && modifier !== '*') {
+                    value = value.substring(0, parseInt(modifier, 10));
+                }
+
+                result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : null));
+            } else {
+                if (modifier === '*') {
+                    if (Array.isArray(value)) {
+                        value.filter(isDefined).forEach(function (value) {
+                            result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : null));
+                        });
+                    } else {
+                        Object.keys(value).forEach(function (k) {
+                            if (isDefined(value[k])) {
+                                result.push(encodeValue(operator, value[k], k));
+                            }
+                        });
+                    }
+                } else {
+                    var tmp = [];
+
+                    if (Array.isArray(value)) {
+                        value.filter(isDefined).forEach(function (value) {
+                            tmp.push(encodeValue(operator, value));
+                        });
+                    } else {
+                        Object.keys(value).forEach(function (k) {
+                            if (isDefined(value[k])) {
+                                tmp.push(encodeURIComponent(k));
+                                tmp.push(encodeValue(operator, value[k].toString()));
+                            }
+                        });
+                    }
+
+                    if (isKeyOperator(operator)) {
+                        result.push(encodeURIComponent(key) + '=' + tmp.join(','));
+                    } else if (tmp.length !== 0) {
+                        result.push(tmp.join(','));
+                    }
+                }
+            }
+        } else {
+            if (operator === ';') {
+                result.push(encodeURIComponent(key));
+            } else if (value === '' && (operator === '&' || operator === '?')) {
+                result.push(encodeURIComponent(key) + '=');
+            } else if (value === '') {
+                result.push('');
+            }
+        }
+
+        return result;
+    }
+
+    function isDefined(value) {
+        return value !== undefined && value !== null;
+    }
+
+    function isKeyOperator(operator) {
+        return operator === ';' || operator === '&' || operator === '?';
+    }
+
+    function encodeValue(operator, value, key) {
+
+        value = (operator === '+' || operator === '#') ? encodeReserved(value) : encodeURIComponent(value);
+
+        if (key) {
+            return encodeURIComponent(key) + '=' + value;
+        } else {
+            return value;
+        }
+    }
+
+    function encodeReserved(str) {
+        return str.split(/(%[0-9A-Fa-f]{2})/g).map(function (part) {
+            if (!/%[0-9A-Fa-f]/.test(part)) {
+                part = encodeURI(part);
+            }
+            return part;
+        }).join('');
+    }
+
+    /**
+     * URL Template (RFC 6570) Transform.
+     */
+
+    function template (options) {
+
+        var variables = [], url = expand(options.url, options.params, variables);
+
+        variables.forEach(function (key) {
+            delete options.params[key];
+        });
+
+        return url;
+    }
+
+    /**
+     * Service for URL templating.
+     */
+
+    function Url(url, params) {
+
+        var self = this || {}, options$$1 = url, transform;
+
+        if (isString(url)) {
+            options$$1 = {url: url, params: params};
+        }
+
+        options$$1 = merge({}, Url.options, self.$options, options$$1);
+
+        Url.transforms.forEach(function (handler) {
+
+            if (isString(handler)) {
+                handler = Url.transform[handler];
+            }
+
+            if (isFunction(handler)) {
+                transform = factory(handler, transform, self.$vm);
+            }
+
+        });
+
+        return transform(options$$1);
+    }
+
+    /**
+     * Url options.
+     */
+
+    Url.options = {
+        url: '',
+        root: null,
+        params: {}
+    };
+
+    /**
+     * Url transforms.
+     */
+
+    Url.transform = {template: template, query: query, root: root};
+    Url.transforms = ['template', 'query', 'root'];
+
+    /**
+     * Encodes a Url parameter string.
+     *
+     * @param {Object} obj
+     */
+
+    Url.params = function (obj) {
+
+        var params = [], escape = encodeURIComponent;
+
+        params.add = function (key, value) {
+
+            if (isFunction(value)) {
+                value = value();
+            }
+
+            if (value === null) {
+                value = '';
+            }
+
+            this.push(escape(key) + '=' + escape(value));
+        };
+
+        serialize(params, obj);
+
+        return params.join('&').replace(/%20/g, '+');
+    };
+
+    /**
+     * Parse a URL and return its components.
+     *
+     * @param {String} url
+     */
+
+    Url.parse = function (url) {
+
+        var el = document.createElement('a');
+
+        if (document.documentMode) {
+            el.href = url;
+            url = el.href;
+        }
+
+        el.href = url;
+
+        return {
+            href: el.href,
+            protocol: el.protocol ? el.protocol.replace(/:$/, '') : '',
+            port: el.port,
+            host: el.host,
+            hostname: el.hostname,
+            pathname: el.pathname.charAt(0) === '/' ? el.pathname : '/' + el.pathname,
+            search: el.search ? el.search.replace(/^\?/, '') : '',
+            hash: el.hash ? el.hash.replace(/^#/, '') : ''
+        };
+    };
+
+    function factory(handler, next, vm) {
+        return function (options$$1) {
+            return handler.call(vm, options$$1, next);
+        };
+    }
+
+    function serialize(params, obj, scope) {
+
+        var array = isArray(obj), plain = isPlainObject(obj), hash;
+
+        each(obj, function (value, key) {
+
+            hash = isObject(value) || isArray(value);
+
+            if (scope) {
+                key = scope + '[' + (plain || hash ? key : '') + ']';
+            }
+
+            if (!scope && array) {
+                params.add(value.name, value.value);
+            } else if (hash) {
+                serialize(params, value, key);
+            } else {
+                params.add(key, value);
+            }
+        });
+    }
 
-	function xdrClient(request) {
-		return new PromiseObj(function (resolve) {
+    /**
+     * XDomain client (Internet Explorer).
+     */
 
-			var xdr = new XDomainRequest(), handler = function (ref) {
-				var type = ref.type;
+    function xdrClient (request) {
+        return new PromiseObj(function (resolve) {
 
+            var xdr = new XDomainRequest(), handler = function (ref) {
+                    var type = ref.type;
 
-				var status = 0;
-
-				if (type === 'load') {
-					status = 200;
-				} else if (type === 'error') {
-					status = 500;
-				}
 
-				resolve(request.respondWith(xdr.responseText, {status}));
-			};
+                    var status = 0;
 
-			request.abort = function () {
-				return xdr.abort();
-			};
+                    if (type === 'load') {
+                        status = 200;
+                    } else if (type === 'error') {
+                        status = 500;
+                    }
 
-			xdr.open(request.method, request.getUrl());
+                    resolve(request.respondWith(xdr.responseText, {status: status}));
+                };
 
-			if (request.timeout) {
-				xdr.timeout = request.timeout;
-			}
+            request.abort = function () { return xdr.abort(); };
 
-			xdr.onload = handler;
-			xdr.onabort = handler;
-			xdr.onerror = handler;
-			xdr.ontimeout = handler;
-			xdr.onprogress = function () {
-			};
-			xdr.send(request.getBody());
-		});
-	}
+            xdr.open(request.method, request.getUrl());
 
-	/**
-	 * CORS Interceptor.
-	 */
+            if (request.timeout) {
+                xdr.timeout = request.timeout;
+            }
 
-	var SUPPORTS_CORS = inBrowser && 'withCredentials' in new XMLHttpRequest();
+            xdr.onload = handler;
+            xdr.onabort = handler;
+            xdr.onerror = handler;
+            xdr.ontimeout = handler;
+            xdr.onprogress = function () {};
+            xdr.send(request.getBody());
+        });
+    }
 
-	function cors(request) {
+    /**
+     * CORS Interceptor.
+     */
 
-		if (inBrowser) {
+    var SUPPORTS_CORS = inBrowser && 'withCredentials' in new XMLHttpRequest();
 
-			var orgUrl = Url.parse(location.href);
-			var reqUrl = Url.parse(request.getUrl());
+    function cors (request) {
 
-			if (reqUrl.protocol !== orgUrl.protocol || reqUrl.host !== orgUrl.host) {
+        if (inBrowser) {
 
-				request.crossOrigin = true;
-				request.emulateHTTP = false;
+            var orgUrl = Url.parse(location.href);
+            var reqUrl = Url.parse(request.getUrl());
 
-				if (!SUPPORTS_CORS) {
-					request.client = xdrClient;
-				}
-			}
-		}
+            if (reqUrl.protocol !== orgUrl.protocol || reqUrl.host !== orgUrl.host) {
 
-	}
+                request.crossOrigin = true;
+                request.emulateHTTP = false;
 
-	/**
-	 * Form data Interceptor.
-	 */
+                if (!SUPPORTS_CORS) {
+                    request.client = xdrClient;
+                }
+            }
+        }
 
-	function form(request) {
+    }
 
-		if (isFormData(request.body)) {
-			request.headers.delete('Content-Type');
-		} else if (isObject(request.body) && request.emulateJSON) {
-			request.body = Url.params(request.body);
-			request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
-		}
+    /**
+     * Form data Interceptor.
+     */
 
-	}
+    function form (request) {
 
-	/**
-	 * JSON Interceptor.
-	 */
+        if (isFormData(request.body)) {
+            request.headers.delete('Content-Type');
+        } else if (isObject(request.body) && request.emulateJSON) {
+            request.body = Url.params(request.body);
+            request.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+        }
 
-	function json(request) {
+    }
 
-		var type = request.headers.get('Content-Type') || '';
+    /**
+     * JSON Interceptor.
+     */
 
-		if (isObject(request.body) && type.indexOf('application/json') === 0) {
-			request.body = JSON.stringify(request.body);
-		}
+    function json (request) {
 
-		return function (response) {
+        var type = request.headers.get('Content-Type') || '';
 
-			return response.bodyText ? when(response.text(), function (text) {
+        if (isObject(request.body) && type.indexOf('application/json') === 0) {
+            request.body = JSON.stringify(request.body);
+        }
 
-				var type = response.headers.get('Content-Type') || '';
+        return function (response) {
 
-				if (type.indexOf('application/json') === 0 || isJson(text)) {
+            return response.bodyText ? when(response.text(), function (text) {
 
-					try {
-						response.body = JSON.parse(text);
-					} catch (e) {
-						response.body = null;
-					}
+                var type = response.headers.get('Content-Type') || '';
 
-				} else {
-					response.body = text;
-				}
+                if (type.indexOf('application/json') === 0 || isJson(text)) {
 
-				return response;
+                    try {
+                        response.body = JSON.parse(text);
+                    } catch (e) {
+                        response.body = null;
+                    }
 
-			}) : response;
+                } else {
+                    response.body = text;
+                }
 
-		};
-	}
+                return response;
 
-	function isJson(str) {
+            }) : response;
 
-		var start = str.match(/^\s*(\[|\{)/);
-		var end = {'[': /]\s*$/, '{': /}\s*$/};
+        };
+    }
 
-		return start && end[start[1]].test(str);
-	}
+    function isJson(str) {
 
-	/**
-	 * JSONP client (Browser).
-	 */
+        var start = str.match(/^\s*(\[|\{)/);
+        var end = {'[': /]\s*$/, '{': /}\s*$/};
 
-	function jsonpClient(request) {
-		return new PromiseObj(function (resolve) {
+        return start && end[start[1]].test(str);
+    }
 
-			var name = request.jsonp || 'callback',
-				callback = request.jsonpCallback || '_jsonp' + Math.random().toString(36).substr(2), body = null,
-				handler, script;
+    /**
+     * JSONP client (Browser).
+     */
 
-			handler = function (ref) {
-				var type = ref.type;
+    function jsonpClient (request) {
+        return new PromiseObj(function (resolve) {
 
+            var name = request.jsonp || 'callback', callback = request.jsonpCallback || '_jsonp' + Math.random().toString(36).substr(2), body = null, handler, script;
 
-				var status = 0;
+            handler = function (ref) {
+                var type = ref.type;
 
-				if (type === 'load' && body !== null) {
-					status = 200;
-				} else if (type === 'error') {
-					status = 500;
-				}
 
-				if (status && window[callback]) {
-					delete window[callback];
-					document.body.removeChild(script);
-				}
+                var status = 0;
 
-				resolve(request.respondWith(body, {status}));
-			};
+                if (type === 'load' && body !== null) {
+                    status = 200;
+                } else if (type === 'error') {
+                    status = 500;
+                }
 
-			window[callback] = function (result) {
-				body = JSON.stringify(result);
-			};
+                if (status && window[callback]) {
+                    delete window[callback];
+                    document.body.removeChild(script);
+                }
 
-			request.abort = function () {
-				handler({type: 'abort'});
-			};
+                resolve(request.respondWith(body, {status: status}));
+            };
 
-			request.params[name] = callback;
+            window[callback] = function (result) {
+                body = JSON.stringify(result);
+            };
 
-			if (request.timeout) {
-				setTimeout(request.abort, request.timeout);
-			}
+            request.abort = function () {
+                handler({type: 'abort'});
+            };
 
-			script = document.createElement('script');
-			script.src = request.getUrl();
-			script.type = 'text/javascript';
-			script.async = true;
-			script.onload = handler;
-			script.onerror = handler;
+            request.params[name] = callback;
 
-			document.body.appendChild(script);
-		});
-	}
+            if (request.timeout) {
+                setTimeout(request.abort, request.timeout);
+            }
 
-	/**
-	 * JSONP Interceptor.
-	 */
+            script = document.createElement('script');
+            script.src = request.getUrl();
+            script.type = 'text/javascript';
+            script.async = true;
+            script.onload = handler;
+            script.onerror = handler;
 
-	function jsonp(request) {
+            document.body.appendChild(script);
+        });
+    }
 
-		if (request.method == 'JSONP') {
-			request.client = jsonpClient;
-		}
+    /**
+     * JSONP Interceptor.
+     */
 
-	}
+    function jsonp (request) {
 
-	/**
-	 * Before Interceptor.
-	 */
+        if (request.method == 'JSONP') {
+            request.client = jsonpClient;
+        }
 
-	function before(request) {
+    }
 
-		if (isFunction(request.before)) {
-			request.before.call(this, request);
-		}
+    /**
+     * Before Interceptor.
+     */
 
-	}
+    function before (request) {
 
-	/**
-	 * HTTP method override Interceptor.
-	 */
+        if (isFunction(request.before)) {
+            request.before.call(this, request);
+        }
 
-	function method(request) {
+    }
 
-		if (request.emulateHTTP && /^(PUT|PATCH|DELETE)$/i.test(request.method)) {
-			request.headers.set('X-HTTP-Method-Override', request.method);
-			request.method = 'POST';
-		}
+    /**
+     * HTTP method override Interceptor.
+     */
 
-	}
+    function method (request) {
 
-	/**
-	 * Header Interceptor.
-	 */
+        if (request.emulateHTTP && /^(PUT|PATCH|DELETE)$/i.test(request.method)) {
+            request.headers.set('X-HTTP-Method-Override', request.method);
+            request.method = 'POST';
+        }
 
-	function header(request) {
+    }
 
-		var headers = assign({}, Http.headers.common,
-			!request.crossOrigin ? Http.headers.custom : {},
-			Http.headers[toLower(request.method)]
-		);
+    /**
+     * Header Interceptor.
+     */
 
-		each(headers, function (value, name) {
-			if (!request.headers.has(name)) {
-				request.headers.set(name, value);
-			}
-		});
+    function header (request) {
 
-	}
+        var headers = assign({}, Http.headers.common,
+            !request.crossOrigin ? Http.headers.custom : {},
+            Http.headers[toLower(request.method)]
+        );
 
-	/**
-	 * XMLHttp client (Browser).
-	 */
+        each(headers, function (value, name) {
+            if (!request.headers.has(name)) {
+                request.headers.set(name, value);
+            }
+        });
 
-	function xhrClient(request) {
-		return new PromiseObj(function (resolve) {
+    }
 
-			var xhr = new XMLHttpRequest(), handler = function (event) {
+    /**
+     * XMLHttp client (Browser).
+     */
 
-				var response = request.respondWith(
-					'response' in xhr ? xhr.response : xhr.responseText, {
-						status: xhr.status === 1223 ? 204 : xhr.status, // IE9 status bug
-						statusText: xhr.status === 1223 ? 'No Content' : trim(xhr.statusText)
-					});
+    function xhrClient (request) {
+        return new PromiseObj(function (resolve) {
 
-				each(trim(xhr.getAllResponseHeaders()).split('\n'), function (row) {
-					response.headers.append(row.slice(0, row.indexOf(':')), row.slice(row.indexOf(':') + 1));
-				});
+            var xhr = new XMLHttpRequest(), handler = function (event) {
 
-				resolve(response);
-			};
+                    var response = request.respondWith(
+                    'response' in xhr ? xhr.response : xhr.responseText, {
+                        status: xhr.status === 1223 ? 204 : xhr.status, // IE9 status bug
+                        statusText: xhr.status === 1223 ? 'No Content' : trim(xhr.statusText)
+                    });
 
-			request.abort = function () {
-				return xhr.abort();
-			};
+                    each(trim(xhr.getAllResponseHeaders()).split('\n'), function (row) {
+                        response.headers.append(row.slice(0, row.indexOf(':')), row.slice(row.indexOf(':') + 1));
+                    });
 
-			xhr.open(request.method, request.getUrl(), true);
+                    resolve(response);
+                };
 
-			if (request.timeout) {
-				xhr.timeout = request.timeout;
-			}
+            request.abort = function () { return xhr.abort(); };
 
-			if (request.responseType && 'responseType' in xhr) {
-				xhr.responseType = request.responseType;
-			}
+            xhr.open(request.method, request.getUrl(), true);
 
-			if (request.withCredentials || request.credentials) {
-				xhr.withCredentials = true;
-			}
+            if (request.timeout) {
+                xhr.timeout = request.timeout;
+            }
 
-			if (!request.crossOrigin) {
-				request.headers.set('X-Requested-With', 'XMLHttpRequest');
-			}
+            if (request.responseType && 'responseType' in xhr) {
+                xhr.responseType = request.responseType;
+            }
 
-			// deprecated use downloadProgress
-			if (isFunction(request.progress) && request.method === 'GET') {
-				xhr.addEventListener('progress', request.progress);
-			}
+            if (request.withCredentials || request.credentials) {
+                xhr.withCredentials = true;
+            }
 
-			if (isFunction(request.downloadProgress)) {
-				xhr.addEventListener('progress', request.downloadProgress);
-			}
+            if (!request.crossOrigin) {
+                request.headers.set('X-Requested-With', 'XMLHttpRequest');
+            }
 
-			// deprecated use uploadProgress
-			if (isFunction(request.progress) && /^(POST|PUT)$/i.test(request.method)) {
-				xhr.upload.addEventListener('progress', request.progress);
-			}
+            // deprecated use downloadProgress
+            if (isFunction(request.progress) && request.method === 'GET') {
+                xhr.addEventListener('progress', request.progress);
+            }
 
-			if (isFunction(request.uploadProgress) && xhr.upload) {
-				xhr.upload.addEventListener('progress', request.uploadProgress);
-			}
+            if (isFunction(request.downloadProgress)) {
+                xhr.addEventListener('progress', request.downloadProgress);
+            }
 
-			request.headers.forEach(function (value, name) {
-				xhr.setRequestHeader(name, value);
-			});
+            // deprecated use uploadProgress
+            if (isFunction(request.progress) && /^(POST|PUT)$/i.test(request.method)) {
+                xhr.upload.addEventListener('progress', request.progress);
+            }
 
-			xhr.onload = handler;
-			xhr.onabort = handler;
-			xhr.onerror = handler;
-			xhr.ontimeout = handler;
-			xhr.send(request.getBody());
-		});
-	}
+            if (isFunction(request.uploadProgress) && xhr.upload) {
+                xhr.upload.addEventListener('progress', request.uploadProgress);
+            }
 
-	/**
-	 * Http client (Node).
-	 */
+            request.headers.forEach(function (value, name) {
+                xhr.setRequestHeader(name, value);
+            });
 
-	function nodeClient(request) {
+            xhr.onload = handler;
+            xhr.onabort = handler;
+            xhr.onerror = handler;
+            xhr.ontimeout = handler;
+            xhr.send(request.getBody());
+        });
+    }
 
-		var client = require('got');
+    /**
+     * Http client (Node).
+     */
 
-		return new PromiseObj(function (resolve) {
+    function nodeClient (request) {
 
-			var url = request.getUrl();
-			var body = request.getBody();
-			var method = request.method;
-			var headers = {}, handler;
+        var client = require('got');
 
-			request.headers.forEach(function (value, name) {
-				headers[name] = value;
-			});
+        return new PromiseObj(function (resolve) {
 
-			client(url, {body, method, headers}).then(handler = function (resp) {
+            var url = request.getUrl();
+            var body = request.getBody();
+            var method = request.method;
+            var headers = {}, handler;
 
-				var response = request.respondWith(resp.body, {
-					status: resp.statusCode,
-					statusText: trim(resp.statusMessage)
-				});
+            request.headers.forEach(function (value, name) {
+                headers[name] = value;
+            });
 
-				each(resp.headers, function (value, name) {
-					response.headers.set(name, value);
-				});
+            client(url, {body: body, method: method, headers: headers}).then(handler = function (resp) {
 
-				resolve(response);
+                var response = request.respondWith(resp.body, {
+                    status: resp.statusCode,
+                    statusText: trim(resp.statusMessage)
+                });
 
-			}, function (error$$1) {
-				return handler(error$$1.response);
-			});
-		});
-	}
+                each(resp.headers, function (value, name) {
+                    response.headers.set(name, value);
+                });
 
-	/**
-	 * Base client.
-	 */
+                resolve(response);
 
-	function Client(context) {
+            }, function (error$$1) { return handler(error$$1.response); });
+        });
+    }
 
-		var reqHandlers = [sendRequest], resHandlers = [];
+    /**
+     * Base client.
+     */
 
-		if (!isObject(context)) {
-			context = null;
-		}
+    function Client (context) {
 
-		function Client(request) {
-			while (reqHandlers.length) {
+        var reqHandlers = [sendRequest], resHandlers = [];
 
-				var handler = reqHandlers.pop();
+        if (!isObject(context)) {
+            context = null;
+        }
 
-				if (isFunction(handler)) {
+        function Client(request) {
+            while (reqHandlers.length) {
 
-					var response = void0, next = void0;
+                var handler = reqHandlers.pop();
 
-					response = handler.call(context, request, function (val) {
-						return next = val;
-					}) || next;
+                if (isFunction(handler)) {
 
-					if (isObject(response)) {
-						return new PromiseObj(function (resolve, reject) {
+                    var response = (void 0), next = (void 0);
 
-							resHandlers.forEach(function (handler) {
-								response = when(response, function (response) {
-									return handler.call(context, response) || response;
-								}, reject);
-							});
+                    response = handler.call(context, request, function (val) { return next = val; }) || next;
 
-							when(response, resolve, reject);
+                    if (isObject(response)) {
+                        return new PromiseObj(function (resolve, reject) {
 
-						}, context);
-					}
+                            resHandlers.forEach(function (handler) {
+                                response = when(response, function (response) {
+                                    return handler.call(context, response) || response;
+                                }, reject);
+                            });
 
-					if (isFunction(response)) {
-						resHandlers.unshift(response);
-					}
+                            when(response, resolve, reject);
 
-				} else {
-					warn("Invalid interceptor of type " + typeof handler + ", must be a function");
-				}
-			}
-		}
+                        }, context);
+                    }
 
-		Client.use = function (handler) {
-			reqHandlers.push(handler);
-		};
+                    if (isFunction(response)) {
+                        resHandlers.unshift(response);
+                    }
 
-		return Client;
-	}
+                } else {
+                    warn(("Invalid interceptor of type " + (typeof handler) + ", must be a function"));
+                }
+            }
+        }
 
-	function sendRequest(request) {
+        Client.use = function (handler) {
+            reqHandlers.push(handler);
+        };
 
-		var client = request.client || (inBrowser ? xhrClient : nodeClient);
+        return Client;
+    }
 
-		return client(request);
-	}
+    function sendRequest(request) {
 
-	/**
-	 * HTTP Headers.
-	 */
+        var client = request.client || (inBrowser ? xhrClient : nodeClient);
 
-	var Headers = function Headers(headers) {
-		var this$1 = this;
+        return client(request);
+    }
 
+    /**
+     * HTTP Headers.
+     */
 
-		this.map = {};
+    var Headers = function Headers(headers) {
+        var this$1 = this;
 
-		each(headers, function (value, name) {
-			return this$1.append(name, value);
-		});
-	};
 
-	Headers.prototype.has = function has(name) {
-		return getName(this.map, name) !== null;
-	};
+        this.map = {};
 
-	Headers.prototype.get = function get(name) {
+        each(headers, function (value, name) { return this$1.append(name, value); });
+    };
 
-		var list = this.map[getName(this.map, name)];
+    Headers.prototype.has = function has (name) {
+        return getName(this.map, name) !== null;
+    };
 
-		return list ? list.join() : null;
-	};
+    Headers.prototype.get = function get (name) {
 
-	Headers.prototype.getAll = function getAll(name) {
-		return this.map[getName(this.map, name)] || [];
-	};
+        var list = this.map[getName(this.map, name)];
 
-	Headers.prototype.set = function set(name, value) {
-		this.map[normalizeName(getName(this.map, name) || name)] = [trim(value)];
-	};
+        return list ? list.join() : null;
+    };
 
-	Headers.prototype.append = function append(name, value) {
+    Headers.prototype.getAll = function getAll (name) {
+        return this.map[getName(this.map, name)] || [];
+    };
 
-		var list = this.map[getName(this.map, name)];
+    Headers.prototype.set = function set (name, value) {
+        this.map[normalizeName(getName(this.map, name) || name)] = [trim(value)];
+    };
 
-		if (list) {
-			list.push(trim(value));
-		} else {
-			this.set(name, value);
-		}
-	};
+    Headers.prototype.append = function append (name, value) {
 
-	Headers.prototype.delete = function delete$1(name) {
-		delete this.map[getName(this.map, name)];
-	};
+        var list = this.map[getName(this.map, name)];
 
-	Headers.prototype.deleteAll = function deleteAll() {
-		this.map = {};
-	};
+        if (list) {
+            list.push(trim(value));
+        } else {
+            this.set(name, value);
+        }
+    };
 
-	Headers.prototype.forEach = function forEach(callback, thisArg) {
-		var this$1 = this;
+    Headers.prototype.delete = function delete$1 (name) {
+        delete this.map[getName(this.map, name)];
+    };
 
-		each(this.map, function (list, name) {
-			each(list, function (value) {
-				return callback.call(thisArg, value, name, this$1);
-			});
-		});
-	};
+    Headers.prototype.deleteAll = function deleteAll () {
+        this.map = {};
+    };
 
-	function getName(map, name) {
-		return Object.keys(map).reduce(function (prev, curr) {
-			return toLower(name) === toLower(curr) ? curr : prev;
-		}, null);
-	}
+    Headers.prototype.forEach = function forEach (callback, thisArg) {
+            var this$1 = this;
 
-	function normalizeName(name) {
+        each(this.map, function (list, name) {
+            each(list, function (value) { return callback.call(thisArg, value, name, this$1); });
+        });
+    };
 
-		if (/[^a-z0-9\-#$%&'*+.^_`|~]/i.test(name)) {
-			throw new TypeError('Invalid character in header field name');
-		}
+    function getName(map, name) {
+        return Object.keys(map).reduce(function (prev, curr) {
+            return toLower(name) === toLower(curr) ? curr : prev;
+        }, null);
+    }
 
-		return trim(name);
-	}
+    function normalizeName(name) {
 
-	/**
-	 * HTTP Response.
-	 */
+        if (/[^a-z0-9\-#$%&'*+.^_`|~]/i.test(name)) {
+            throw new TypeError('Invalid character in header field name');
+        }
 
-	var Response = function Response(body, ref) {
-		var url = ref.url;
-		var headers = ref.headers;
-		var status = ref.status;
-		var statusText = ref.statusText;
+        return trim(name);
+    }
 
+    /**
+     * HTTP Response.
+     */
 
-		this.url = url;
-		this.ok = status >= 200 && status < 300;
-		this.status = status || 0;
-		this.statusText = statusText || '';
-		this.headers = new Headers(headers);
-		this.body = body;
+    var Response = function Response(body, ref) {
+        var url = ref.url;
+        var headers = ref.headers;
+        var status = ref.status;
+        var statusText = ref.statusText;
 
-		if (isString(body)) {
 
-			this.bodyText = body;
+        this.url = url;
+        this.ok = status >= 200 && status < 300;
+        this.status = status || 0;
+        this.statusText = statusText || '';
+        this.headers = new Headers(headers);
+        this.body = body;
 
-		} else if (isBlob(body)) {
+        if (isString(body)) {
 
-			this.bodyBlob = body;
+            this.bodyText = body;
 
-			if (isBlobText(body)) {
-				this.bodyText = blobText(body);
-			}
-		}
-	};
+        } else if (isBlob(body)) {
 
-	Response.prototype.blob = function blob() {
-		return when(this.bodyBlob);
-	};
+            this.bodyBlob = body;
 
-	Response.prototype.text = function text() {
-		return when(this.bodyText);
-	};
+            if (isBlobText(body)) {
+                this.bodyText = blobText(body);
+            }
+        }
+    };
 
-	Response.prototype.json = function json() {
-		return when(this.text(), function (text) {
-			return JSON.parse(text);
-		});
-	};
+    Response.prototype.blob = function blob () {
+        return when(this.bodyBlob);
+    };
 
-	Object.defineProperty(Response.prototype, 'data', {
+    Response.prototype.text = function text () {
+        return when(this.bodyText);
+    };
 
-		get() {
-			return this.body;
-		},
+    Response.prototype.json = function json () {
+        return when(this.text(), function (text) { return JSON.parse(text); });
+    };
 
-		set(body) {
-			this.body = body;
-		}
+    Object.defineProperty(Response.prototype, 'data', {
 
-	});
+        get: function get() {
+            return this.body;
+        },
 
-	function blobText(body) {
-		return new PromiseObj(function (resolve) {
+        set: function set(body) {
+            this.body = body;
+        }
 
-			var reader = new FileReader();
+    });
 
-			reader.readAsText(body);
-			reader.onload = function () {
-				resolve(reader.result);
-			};
+    function blobText(body) {
+        return new PromiseObj(function (resolve) {
 
-		});
-	}
+            var reader = new FileReader();
 
-	function isBlobText(body) {
-		return body.type.indexOf('text') === 0 || body.type.indexOf('json') !== -1;
-	}
+            reader.readAsText(body);
+            reader.onload = function () {
+                resolve(reader.result);
+            };
 
-	/**
-	 * HTTP Request.
-	 */
+        });
+    }
 
-	var Request = function Request(options$$1) {
+    function isBlobText(body) {
+        return body.type.indexOf('text') === 0 || body.type.indexOf('json') !== -1;
+    }
 
-		this.body = null;
-		this.params = {};
+    /**
+     * HTTP Request.
+     */
 
-		assign(this, options$$1, {
-			method: toUpper(options$$1.method || 'GET')
-		});
+    var Request = function Request(options$$1) {
 
-		if (!(this.headers instanceof Headers)) {
-			this.headers = new Headers(this.headers);
-		}
-	};
+        this.body = null;
+        this.params = {};
 
-	Request.prototype.getUrl = function getUrl() {
-		return Url(this);
-	};
+        assign(this, options$$1, {
+            method: toUpper(options$$1.method || 'GET')
+        });
 
-	Request.prototype.getBody = function getBody() {
-		return this.body;
-	};
+        if (!(this.headers instanceof Headers)) {
+            this.headers = new Headers(this.headers);
+        }
+    };
 
-	Request.prototype.respondWith = function respondWith(body, options$$1) {
-		return new Response(body, assign(options$$1 || {}, {url: this.getUrl()}));
-	};
+    Request.prototype.getUrl = function getUrl () {
+        return Url(this);
+    };
 
-	/**
-	 * Service for sending network requests.
-	 */
+    Request.prototype.getBody = function getBody () {
+        return this.body;
+    };
 
-	var COMMON_HEADERS = {'Accept': 'application/json, text/plain, */*'};
-	var JSON_CONTENT_TYPE = {'Content-Type': 'application/json;charset=utf-8'};
+    Request.prototype.respondWith = function respondWith (body, options$$1) {
+        return new Response(body, assign(options$$1 || {}, {url: this.getUrl()}));
+    };
 
-	function Http(options$$1) {
+    /**
+     * Service for sending network requests.
+     */
 
-		var self = this || {}, client = Client(self.$vm);
+    var COMMON_HEADERS = {'Accept': 'application/json, text/plain, */*'};
+    var JSON_CONTENT_TYPE = {'Content-Type': 'application/json;charset=utf-8'};
 
-		defaults(options$$1 || {}, self.$options, Http.options);
+    function Http(options$$1) {
 
-		Http.interceptors.forEach(function (handler) {
+        var self = this || {}, client = Client(self.$vm);
 
-			if (isString(handler)) {
-				handler = Http.interceptor[handler];
-			}
+        defaults(options$$1 || {}, self.$options, Http.options);
 
-			if (isFunction(handler)) {
-				client.use(handler);
-			}
+        Http.interceptors.forEach(function (handler) {
 
-		});
+            if (isString(handler)) {
+                handler = Http.interceptor[handler];
+            }
 
-		return client(new Request(options$$1)).then(function (response) {
+            if (isFunction(handler)) {
+                client.use(handler);
+            }
 
-			return response.ok ? response : PromiseObj.reject(response);
+        });
 
-		}, function (response) {
+        return client(new Request(options$$1)).then(function (response) {
 
-			if (response instanceof Error) {
-				error(response);
-			}
+            return response.ok ? response : PromiseObj.reject(response);
 
-			return PromiseObj.reject(response);
-		});
-	}
+        }, function (response) {
 
-	Http.options = {};
+            if (response instanceof Error) {
+                error(response);
+            }
 
-	Http.headers = {
-		put: JSON_CONTENT_TYPE,
-		post: JSON_CONTENT_TYPE,
-		patch: JSON_CONTENT_TYPE,
-		delete: JSON_CONTENT_TYPE,
-		common: COMMON_HEADERS,
-		custom: {}
-	};
+            return PromiseObj.reject(response);
+        });
+    }
 
-	Http.interceptor = {
-		before,
-		method,
-		jsonp,
-		json,
-		form,
-		header,
-		cors
-	};
-	Http.interceptors = ['before', 'method', 'jsonp', 'json', 'form', 'header', 'cors'];
+    Http.options = {};
 
-	['get', 'delete', 'head', 'jsonp'].forEach(function (method$$1) {
+    Http.headers = {
+        put: JSON_CONTENT_TYPE,
+        post: JSON_CONTENT_TYPE,
+        patch: JSON_CONTENT_TYPE,
+        delete: JSON_CONTENT_TYPE,
+        common: COMMON_HEADERS,
+        custom: {}
+    };
 
-		Http[method$$1] = function (url, options$$1) {
-			return this(assign(options$$1 || {}, {url, method: method$$1}));
-		};
+    Http.interceptor = {before: before, method: method, jsonp: jsonp, json: json, form: form, header: header, cors: cors};
+    Http.interceptors = ['before', 'method', 'jsonp', 'json', 'form', 'header', 'cors'];
 
-	});
+    ['get', 'delete', 'head', 'jsonp'].forEach(function (method$$1) {
 
-	['post', 'put', 'patch'].forEach(function (method$$1) {
+        Http[method$$1] = function (url, options$$1) {
+            return this(assign(options$$1 || {}, {url: url, method: method$$1}));
+        };
 
-		Http[method$$1] = function (url, body, options$$1) {
-			return this(assign(options$$1 || {}, {url, method: method$$1, body}));
-		};
+    });
 
-	});
+    ['post', 'put', 'patch'].forEach(function (method$$1) {
 
-	/**
-	 * Service for interacting with RESTful services.
-	 */
+        Http[method$$1] = function (url, body, options$$1) {
+            return this(assign(options$$1 || {}, {url: url, method: method$$1, body: body}));
+        };
 
-	function Resource(url, params, actions, options$$1) {
+    });
 
-		var self = this || {}, resource = {};
+    /**
+     * Service for interacting with RESTful services.
+     */
 
-		actions = assign({},
-			Resource.actions,
-			actions
-		);
+    function Resource(url, params, actions, options$$1) {
 
-		each(actions, function (action, name) {
+        var self = this || {}, resource = {};
 
-			action = merge({url, params: assign({}, params)}, options$$1, action);
+        actions = assign({},
+            Resource.actions,
+            actions
+        );
 
-			resource[name] = function () {
-				return (self.$http || Http)(opts(action, arguments));
-			};
-		});
+        each(actions, function (action, name) {
 
-		return resource;
-	}
+            action = merge({url: url, params: assign({}, params)}, options$$1, action);
 
-	function opts(action, args) {
+            resource[name] = function () {
+                return (self.$http || Http)(opts(action, arguments));
+            };
+        });
 
-		var options$$1 = assign({}, action), params = {}, body;
+        return resource;
+    }
 
-		switch (args.length) {
+    function opts(action, args) {
 
-			case 2:
+        var options$$1 = assign({}, action), params = {}, body;
 
-				params = args[0];
-				body = args[1];
+        switch (args.length) {
 
-				break;
+            case 2:
 
-			case 1:
+                params = args[0];
+                body = args[1];
 
-				if (/^(POST|PUT|PATCH)$/i.test(options$$1.method)) {
-					body = args[0];
-				} else {
-					params = args[0];
-				}
+                break;
 
-				break;
+            case 1:
 
-			case 0:
+                if (/^(POST|PUT|PATCH)$/i.test(options$$1.method)) {
+                    body = args[0];
+                } else {
+                    params = args[0];
+                }
 
-				break;
+                break;
 
-			default:
+            case 0:
 
-				throw 'Expected up to 2 arguments [params, body], got ' + args.length + ' arguments';
-		}
+                break;
 
-		options$$1.body = body;
-		options$$1.params = assign({}, options$$1.params, params);
+            default:
 
-		return options$$1;
-	}
+                throw 'Expected up to 2 arguments [params, body], got ' + args.length + ' arguments';
+        }
 
-	Resource.actions = {
+        options$$1.body = body;
+        options$$1.params = assign({}, options$$1.params, params);
 
-		get: {method: 'GET'},
-		save: {method: 'POST'},
-		query: {method: 'GET'},
-		update: {method: 'PUT'},
-		remove: {method: 'DELETE'},
-		delete: {method: 'DELETE'}
+        return options$$1;
+    }
 
-	};
+    Resource.actions = {
 
-	/**
-	 * Install plugin.
-	 */
+        get: {method: 'GET'},
+        save: {method: 'POST'},
+        query: {method: 'GET'},
+        update: {method: 'PUT'},
+        remove: {method: 'DELETE'},
+        delete: {method: 'DELETE'}
 
-	function plugin(Vue) {
+    };
 
-		if (plugin.installed) {
-			return;
-		}
+    /**
+     * Install plugin.
+     */
 
-		Util(Vue);
+    function plugin(Vue) {
 
-		Vue.url = Url;
-		Vue.http = Http;
-		Vue.resource = Resource;
-		Vue.Promise = PromiseObj;
+        if (plugin.installed) {
+            return;
+        }
 
-		Object.defineProperties(Vue.prototype, {
+        Util(Vue);
 
-			$url: {
-				get() {
-					return options(Vue.url, this, this.$options.url);
-				}
-			},
+        Vue.url = Url;
+        Vue.http = Http;
+        Vue.resource = Resource;
+        Vue.Promise = PromiseObj;
 
-			$http: {
-				get() {
-					return options(Vue.http, this, this.$options.http);
-				}
-			},
+        Object.defineProperties(Vue.prototype, {
 
-			$resource: {
-				get() {
-					return Vue.resource.bind(this);
-				}
-			},
+            $url: {
+                get: function get() {
+                    return options(Vue.url, this, this.$options.url);
+                }
+            },
 
-			$promise: {
-				get() {
-					var this$1 = this;
+            $http: {
+                get: function get() {
+                    return options(Vue.http, this, this.$options.http);
+                }
+            },
 
-					return function (executor) {
-						return new Vue.Promise(executor, this$1);
-					};
-				}
-			}
+            $resource: {
+                get: function get() {
+                    return Vue.resource.bind(this);
+                }
+            },
 
-		});
-	}
+            $promise: {
+                get: function get() {
+                    var this$1 = this;
 
-	if (typeof window !== 'undefined' && window.Vue) {
-		window.Vue.use(plugin);
-	}
+                    return function (executor) { return new Vue.Promise(executor, this$1); };
+                }
+            }
 
-	return plugin;
+        });
+    }
 
-}));
+    if (typeof window !== 'undefined' && window.Vue) {
+        window.Vue.use(plugin);
+    }
+
+    return plugin;
+
+})));
